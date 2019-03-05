@@ -25,6 +25,12 @@ namespace Game_Of_Life
 {
     public partial class Form1 : Form
     {
+        ///родится на следующем шаге, умрет на следующем шаге и текущее число живых
+        int born = 0;
+        int dead = 0;
+        int alive = 0;
+        ///Признак того, что текущее состояние будет изменено на следующем шаге
+        bool Changed = false;
         /// <summary>
         /// Флаг паузы задачи пошаговой трансформации
         /// </summary>
@@ -195,83 +201,19 @@ namespace Game_Of_Life
         /// <summary>
         /// Трансформация текущего состояния по правилам
         /// </summary>
-        private void Transform()
+        private async void Transform()
         {
-            //родится на следующем шаге, умрет на следующем шаге и текущее число живых
-            int born = 0;
-            int dead = 0;
-            int alive = 0;
-            //Признак того, что текущее состояние будет изменено на следующем шаге
-            bool Changed = false;
+            born = 0;
+            dead = 0;
+            alive = 0;
+            Changed = false;
             NextState = new bool[FieldHeight, FieldWidth];
             int divider = (int)(FieldHeight / 2);
             //обсчитывать трансформацию будем в два параллельных потока
             //создаем массив асинхронных задач, делим поле пополам
-            Task[] tasks = new Task[2]
-            {
-                new Task(() => {
-                    for (int y = 0; y < divider; y++)
-                    {
-                        for (int x = 0; x < FieldWidth; x++)
-                        {
-                            byte nmask = GetNeighborsMask(y, x);
-                            int ncount = countSetBits((int)nmask);
-                            // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
-                            // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
-                            // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
-                            if (!CurrentState[y, x] && ncount == 3)
-                            {
-                                NextState[y, x] = true;
-                                born++;
-                                Changed = true;
-                            }
-                            if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
-                            {
-                                dead++;
-                                Changed = true;
-                            }
-                            if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
-                            {
-                                NextState[y, x] = true;
-                            }
-                            if (NextState[y, x]) alive++;
-                        }
-                    }
-                }),
-                new Task(() => {
-                    for (int y = divider; y < FieldHeight; y++)
-                    {
-                        for (int x = 0; x < FieldWidth; x++)
-                        {
-                            byte nmask = GetNeighborsMask(y, x);
-                            int ncount = countSetBits((int)nmask);
-                            // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
-                            // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
-                            // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
-                            if (!CurrentState[y, x] && ncount == 3)
-                            {
-                                NextState[y, x] = true;
-                                born++;
-                                Changed = true;
-                            }
-                            if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
-                            {
-                                dead++;
-                                Changed = true;
-                            }
-                            if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
-                            {
-                                NextState[y, x] = true;
-                            }
-                            if (NextState[y, x]) alive++;
-                        }
-                    }
-                })
-            };
-            //запускаем обе асинхронные задачи
-            foreach (var t in tasks) t.Start();
-            // ожидаем завершения обеих задач
-            Task.WaitAll(tasks);  
+            var task1 = ProcessTransform(0, divider);
+            var task2 = ProcessTransform(divider, FieldHeight);
+            await Task.WhenAll(task1, task2);
             Instance.Invoke((MethodInvoker)delegate
             {
                 if (alive > MaxAlive) MaxAlive = alive;
@@ -318,6 +260,39 @@ namespace Game_Of_Life
                 MessageBox.Show(string.Format("Life freezed with no change at move# {0}", movenumber),"Information",MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
+
+        private async Task<bool> ProcessTransform(int from, int to)
+        {
+            for (int y = from; y < to; y++)
+            {
+                for (int x = 0; x < FieldWidth; x++)
+                {
+                    byte nmask = GetNeighborsMask(y, x);
+                    int ncount = countSetBits((int)nmask);
+                    // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
+                    // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
+                    // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
+                    if (!CurrentState[y, x] && ncount == 3)
+                    {
+                        NextState[y, x] = true;
+                        born++;
+                        Changed = true;
+                    }
+                    if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
+                    {
+                        dead++;
+                        Changed = true;
+                    }
+                    if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
+                    {
+                        NextState[y, x] = true;
+                    }
+                    if (NextState[y, x]) alive++;
+                }
+            }
+            return true;
+        }
+
         /// <summary>
         /// Находит соседей указанной клетки
         /// Противоположные края поля замкнуты друг на друга, т.е. при переходе через границы точка уходит на противоположную сторону картинки
