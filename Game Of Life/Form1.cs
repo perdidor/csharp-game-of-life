@@ -204,33 +204,74 @@ namespace Game_Of_Life
             //Признак того, что текущее состояние будет изменено на следующем шаге
             bool Changed = false;
             NextState = new bool[FieldHeight, FieldWidth];
-            for (int y = 0; y < FieldHeight; y++)
+            int divider = (int)(FieldHeight / 2);
+            //обсчитывать трансформацию будем в два параллельных потока
+            //создаем массив асинхронных задач, делим поле пополам
+            Task[] tasks = new Task[2]
             {
-                for (int x = 0; x < FieldWidth; x++)
-                {
-                    byte nmask = GetNeighborsMask(y, x);
-                    int ncount = countSetBits((int)nmask);
-                    // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
-                    // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
-                    // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
-                    if (!CurrentState[y, x] && ncount == 3)
+                new Task(() => {
+                    for (int y = 0; y < divider; y++)
                     {
-                        NextState[y, x] = true;
-                        born++;
-                        Changed = true;
+                        for (int x = 0; x < FieldWidth; x++)
+                        {
+                            byte nmask = GetNeighborsMask(y, x);
+                            int ncount = countSetBits((int)nmask);
+                            // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
+                            // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
+                            // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
+                            if (!CurrentState[y, x] && ncount == 3)
+                            {
+                                NextState[y, x] = true;
+                                born++;
+                                Changed = true;
+                            }
+                            if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
+                            {
+                                dead++;
+                                Changed = true;
+                            }
+                            if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
+                            {
+                                NextState[y, x] = true;
+                            }
+                            if (NextState[y, x]) alive++;
+                        }
                     }
-                    if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
+                }),
+                new Task(() => {
+                    for (int y = divider; y < FieldHeight; y++)
                     {
-                        dead++;
-                        Changed = true;
+                        for (int x = 0; x < FieldWidth; x++)
+                        {
+                            byte nmask = GetNeighborsMask(y, x);
+                            int ncount = countSetBits((int)nmask);
+                            // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
+                            // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
+                            // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
+                            if (!CurrentState[y, x] && ncount == 3)
+                            {
+                                NextState[y, x] = true;
+                                born++;
+                                Changed = true;
+                            }
+                            if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
+                            {
+                                dead++;
+                                Changed = true;
+                            }
+                            if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
+                            {
+                                NextState[y, x] = true;
+                            }
+                            if (NextState[y, x]) alive++;
+                        }
                     }
-                    if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
-                    {
-                        NextState[y, x] = true;
-                    }
-                    if (NextState[y, x]) alive++;
-                }
-            }
+                })
+            };
+            //запускаем обе асинхронные задачи
+            foreach (var t in tasks) t.Start();
+            // ожидаем завершения обеих задач
+            Task.WaitAll(tasks);  
             Instance.Invoke((MethodInvoker)delegate
             {
                 if (alive > MaxAlive) MaxAlive = alive;
