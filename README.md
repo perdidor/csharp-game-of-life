@@ -8,3 +8,5 @@
 
 Правила:
 https://ru.wikipedia.org/wiki/Игра_«Жизнь»
+
+<img src="https://github.com/perdidor/csharp-game-of-life/blob/master/screenshot.png" width="800">
