@@ -115,6 +115,11 @@ namespace Game_Of_Life
         /// ОБъект картинки, изображающей поле
         /// </summary>
         Bitmap CurrentBitMap;
+        /// <summary>
+        /// кратность увеличения
+        /// </summary>
+        int zoomFactor = 1;
+
 
         /// <summary>
         /// Запуск приложения
@@ -127,8 +132,11 @@ namespace Game_Of_Life
             FieldHeight = pic.Height;
             FieldWidth = pic.Width;
             CurrentBitMap = new Bitmap(FieldWidth, FieldHeight, PixelFormat.Format1bppIndexed);
-            pic.Image = CurrentBitMap;
+            //zoomcb.SelectedIndex = 0;
             cpcb.SelectedIndex = 0;
+            pic.MouseWheel += Pic_MouseWheel;
+            ShowBitMap();
+            Refresh();
             ChartPoints = Convert.ToInt16(cpcb.Items[0].ToString());
             //подключаем обработчик события изменения положения ползунка (если подключить раньше или в свойствах контрола, будет ошибка на две строки ранее при изменении индекса)
             cpcb.SelectedIndexChanged += cpcb_SelectedIndexChanged;
@@ -169,6 +177,49 @@ namespace Game_Of_Life
 
                 }
             });
+        }
+        /// <summary>
+        /// зум картинки меняется в пределах х1..х4 прокручиванием колесика мыши, на 4 Гб ОЗУ больше 4 ставить не надо памяти не хватит.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Pic_MouseWheel(object sender, MouseEventArgs e)
+        {
+            Instance.Invoke((MethodInvoker)delegate
+            {
+                if (e.Delta > 3)
+                {
+                    if (zoomFactor < 4) zoomFactor++;
+                    if (seedcomplete && suspended)
+                    {
+                        ShowBitMap();
+                        Refresh();
+                    }
+                }
+                if (e.Delta < -3)
+                {
+                    if (zoomFactor > 1) zoomFactor--;
+                    if (seedcomplete && suspended)
+                    {
+                        ShowBitMap();
+                        Refresh();
+                    }
+                }
+            });
+        }
+        /// <summary>
+        /// Выводим картинку с текущей степенью увеличения
+        /// </summary>
+        private void ShowBitMap()
+        {
+            Size newSize = new Size((int)(CurrentBitMap.Width * zoomFactor), (int)(CurrentBitMap.Height * zoomFactor));
+            Bitmap tmpbitmap = new Bitmap(CurrentBitMap, newSize);
+            pic.Width = tmpbitmap.Width;
+            pic.Height = tmpbitmap.Height;
+            pic.Image = tmpbitmap;
+            panel1.VerticalScroll.Visible = (pic.Height > panel1.Height);
+            panel1.HorizontalScroll.Visible = (pic.Width > panel1.Width);
+            zoomlabel.Text = string.Format("x{0}", zoomFactor);
         }
 
         /// <summary>
@@ -246,8 +297,6 @@ namespace Game_Of_Life
                 chart.Series[0].Points.AddXY(movenumber, alive);
                 chart.Series[1].Points.AddXY(movenumber, born);
                 chart.Series[2].Points.AddXY(movenumber, dead);
-                //обновляем окно дл яотображения изменений
-                Refresh();
             });
             if (Changed)
             {
@@ -261,7 +310,9 @@ namespace Game_Of_Life
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async Task<bool> ProcessTransform(int from, int to)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             for (int y = from; y < to; y++)
             {
@@ -389,7 +440,8 @@ namespace Game_Of_Life
                     }
                 }
                 CurrentBitMap.UnlockBits(data);
-                pic.Refresh();
+                ShowBitMap();
+                Refresh();
             });
         }
         /// <summary>
@@ -458,7 +510,6 @@ namespace Game_Of_Life
             chart.Series[2].Points.Clear();
             InitialDensityPercent = trackBar1.Value;
             seedpercent.Text = InitialDensityPercent.ToString();
-            Refresh();
             CurrentState = new bool[FieldHeight, FieldWidth];
             NextState = new bool[FieldHeight, FieldWidth];
             InitialSeed();
