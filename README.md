@@ -1,4 +1,4 @@
-# Игра "Жизнь" реализация .Net c# (The Game Of Life c# implementation)
+﻿# Игра "Жизнь" реализация .Net c# (The Game Of Life c# implementation)
 
 Программа написана по причине отсутствия публично доступных вменяемых реализаций алгоритма с исходниками на языке c# (на момент публикации).
 
@@ -9,4 +9,4 @@
 Правила:
 https://ru.wikipedia.org/wiki/Игра_«Жизнь»
 
-<img src="https://github.com/perdidor/csharp-game-of-life/blob/master/screenshot.png" width="800">
+<img src="https://github.com/perdidor/csharp-game-of-life/blob/master/screenshot2.png" width="800">
