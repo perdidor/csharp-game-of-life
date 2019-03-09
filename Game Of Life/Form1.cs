@@ -29,6 +29,18 @@ namespace Game_Of_Life
         int born = 0;
         int dead = 0;
         int alive = 0;
+        /// <summary>
+        /// Риск внезапной смерти %
+        /// </summary>
+        int SuddenDeathPercent = 7;
+        /// <summary>
+        /// максимальное время жизни клетки
+        /// </summary>
+        int MaxTTL = 6;
+        /// <summary>
+        /// массив значений текущей продолжительности жизни
+        /// </summary>
+        int[,] LifeTime;
         ///Признак того, что текущее состояние будет изменено на следующем шаге
         bool Changed = false;
         /// <summary>
@@ -129,8 +141,11 @@ namespace Game_Of_Life
             InitializeComponent();
             //инициализируем переменные
             Instance = this;
+            MaxTTL = (int)ttl.Value;
+            SuddenDeathPercent = (int)sdprob.Value;
             FieldHeight = pic.Height;
             FieldWidth = pic.Width;
+            LifeTime = new int[FieldHeight, FieldWidth];
             CurrentBitMap = new Bitmap(FieldWidth, FieldHeight, PixelFormat.Format1bppIndexed);
             //zoomcb.SelectedIndex = 0;
             cpcb.SelectedIndex = 0;
@@ -305,7 +320,7 @@ namespace Game_Of_Life
             } else
             {
                 //Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
-                suspended = false;
+                suspended = true;
                 MessageBox.Show(string.Format("Life freezed with no change at move# {0}", movenumber),"Information",MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -314,6 +329,7 @@ namespace Game_Of_Life
         private async Task<bool> ProcessTransform(int from, int to)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
+            Random sdrnd = new Random(Guid.NewGuid().GetHashCode());
             for (int y = from; y < to; y++)
             {
                 for (int x = 0; x < FieldWidth; x++)
@@ -323,22 +339,31 @@ namespace Game_Of_Life
                     // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
                     // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
                     // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
-                    if (!CurrentState[y, x] && ncount == 3)
+                    bool state = CurrentState[y, x];
+                    if (state)
+                    {
+                        LifeTime[y, x]++;
+                        alive++;
+                    }
+                    if (state && (ncount == 4 || ncount == 3 || ncount == 2))
+                    {
+                        NextState[y, x] = true;
+                    }
+                    if (state && (ncount > 4 || ncount < 2 || (LifeTime[y, x] == MaxTTL) || (sdrnd.Next(100) <= SuddenDeathPercent)))
+                    {
+                        dead++;
+                        alive--;
+                        NextState[y, x] = false;
+                        CurrentState[y, x] = false;
+                        LifeTime[y, x] = 0;
+                        Changed = true;
+                    }
+                    if (!state && ncount == 3)
                     {
                         NextState[y, x] = true;
                         born++;
                         Changed = true;
                     }
-                    if (CurrentState[y, x] && (ncount > 3 || ncount < 2))
-                    {
-                        dead++;
-                        Changed = true;
-                    }
-                    if (CurrentState[y, x] && (ncount == 3 || ncount == 2))
-                    {
-                        NextState[y, x] = true;
-                    }
-                    if (NextState[y, x]) alive++;
                 }
             }
             return true;
@@ -557,6 +582,24 @@ namespace Game_Of_Life
                 chart.ChartAreas[0].AxisX.Minimum = (movenumber <= ChartPoints) ? 0 : (movenumber - chart.Series[0].Points.Count);
                 chart.ChartAreas[0].AxisX.Maximum = (movenumber <= ChartPoints) ? ChartPoints : (chart.ChartAreas[0].AxisX.Minimum + ChartPoints);
             });
+        }
+        /// <summary>
+        /// меняем значение риска внезапной смерти
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void sdprob_ValueChanged(object sender, EventArgs e)
+        {
+            SuddenDeathPercent = (int)sdprob.Value;
+        }
+        /// <summary>
+        /// меняем значение максимальной продолжительности жизни
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ttl_ValueChanged(object sender, EventArgs e)
+        {
+            MaxTTL = (int)ttl.Value;
         }
     }
 }

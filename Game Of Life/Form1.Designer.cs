@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series22 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series23 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series24 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.button1 = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.movelabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -53,17 +53,26 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.pic = new System.Windows.Forms.PictureBox();
             this.zoomlabel = new System.Windows.Forms.Label();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.sdprob = new System.Windows.Forms.NumericUpDown();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.ttl = new System.Windows.Forms.NumericUpDown();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pic)).BeginInit();
+            this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.sdprob)).BeginInit();
+            this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ttl)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
             // 
             this.button1.Enabled = false;
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.button1.Location = new System.Drawing.Point(700, 230);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(135, 23);
@@ -155,30 +164,30 @@
             // 
             // chart
             // 
-            chartArea3.Area3DStyle.Enable3D = true;
-            chartArea3.Area3DStyle.WallWidth = 1;
-            chartArea3.Name = "ChartArea1";
-            this.chart.ChartAreas.Add(chartArea3);
+            chartArea8.Area3DStyle.Enable3D = true;
+            chartArea8.Area3DStyle.WallWidth = 1;
+            chartArea8.Name = "ChartArea1";
+            this.chart.ChartAreas.Add(chartArea8);
             this.chart.Location = new System.Drawing.Point(0, 25);
             this.chart.Name = "chart";
-            series7.BorderWidth = 2;
-            series7.ChartArea = "ChartArea1";
-            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series7.Color = System.Drawing.Color.LimeGreen;
-            series7.Name = "Alive";
-            series8.BorderWidth = 2;
-            series8.ChartArea = "ChartArea1";
-            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series8.Color = System.Drawing.Color.Blue;
-            series8.Name = "Born";
-            series9.BorderWidth = 2;
-            series9.ChartArea = "ChartArea1";
-            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series9.Color = System.Drawing.Color.Red;
-            series9.Name = "Dead";
-            this.chart.Series.Add(series7);
-            this.chart.Series.Add(series8);
-            this.chart.Series.Add(series9);
+            series22.BorderWidth = 2;
+            series22.ChartArea = "ChartArea1";
+            series22.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series22.Color = System.Drawing.Color.LimeGreen;
+            series22.Name = "Alive";
+            series23.BorderWidth = 2;
+            series23.ChartArea = "ChartArea1";
+            series23.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series23.Color = System.Drawing.Color.Blue;
+            series23.Name = "Born";
+            series24.BorderWidth = 2;
+            series24.ChartArea = "ChartArea1";
+            series24.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series24.Color = System.Drawing.Color.Red;
+            series24.Name = "Dead";
+            this.chart.Series.Add(series22);
+            this.chart.Series.Add(series23);
+            this.chart.Series.Add(series24);
             this.chart.Size = new System.Drawing.Size(1009, 148);
             this.chart.TabIndex = 10;
             // 
@@ -189,7 +198,7 @@
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.Location = new System.Drawing.Point(0, 183);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(694, 70);
+            this.groupBox1.Size = new System.Drawing.Size(183, 70);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Initial seed filling %";
@@ -198,7 +207,7 @@
             // 
             this.seedpercent.AutoSize = true;
             this.seedpercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.seedpercent.Location = new System.Drawing.Point(660, 27);
+            this.seedpercent.Location = new System.Drawing.Point(162, 30);
             this.seedpercent.Name = "seedpercent";
             this.seedpercent.Size = new System.Drawing.Size(14, 13);
             this.seedpercent.TabIndex = 10;
@@ -209,7 +218,7 @@
             this.trackBar1.Location = new System.Drawing.Point(6, 19);
             this.trackBar1.Maximum = 100;
             this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(648, 45);
+            this.trackBar1.Size = new System.Drawing.Size(150, 45);
             this.trackBar1.TabIndex = 7;
             this.trackBar1.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
             // 
@@ -276,10 +285,62 @@
             this.zoomlabel.Size = new System.Drawing.Size(0, 13);
             this.zoomlabel.TabIndex = 17;
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.sdprob);
+            this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.groupBox2.Location = new System.Drawing.Point(189, 189);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(137, 64);
+            this.groupBox2.TabIndex = 18;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Sudden Death %";
+            // 
+            // sdprob
+            // 
+            this.sdprob.Location = new System.Drawing.Point(6, 24);
+            this.sdprob.Name = "sdprob";
+            this.sdprob.ReadOnly = true;
+            this.sdprob.Size = new System.Drawing.Size(120, 20);
+            this.sdprob.TabIndex = 0;
+            this.sdprob.Value = new decimal(new int[] {
+            7,
+            0,
+            0,
+            0});
+            this.sdprob.ValueChanged += new System.EventHandler(this.sdprob_ValueChanged);
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.ttl);
+            this.groupBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.groupBox3.Location = new System.Drawing.Point(332, 189);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(137, 64);
+            this.groupBox3.TabIndex = 19;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Max TTL";
+            // 
+            // ttl
+            // 
+            this.ttl.Location = new System.Drawing.Point(6, 24);
+            this.ttl.Name = "ttl";
+            this.ttl.ReadOnly = true;
+            this.ttl.Size = new System.Drawing.Size(120, 20);
+            this.ttl.TabIndex = 0;
+            this.ttl.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.ttl.ValueChanged += new System.EventHandler(this.ttl_ValueChanged);
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(1009, 824);
+            this.Controls.Add(this.groupBox3);
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.zoomlabel);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label2);
@@ -304,6 +365,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pic)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.sdprob)).EndInit();
+            this.groupBox3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.ttl)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -331,6 +396,10 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.PictureBox pic;
         private System.Windows.Forms.Label zoomlabel;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.NumericUpDown sdprob;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.NumericUpDown ttl;
     }
 }
 
