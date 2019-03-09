@@ -30,6 +30,18 @@ namespace Game_Of_Life
         int dead = 0;
         int alive = 0;
         /// <summary>
+        /// минимальное количество соседей для выживания
+        /// </summary>
+        int MinNeighbors = 2;
+        /// <summary>
+        /// максимальное количество соседей для выживания
+        /// </summary>
+        int MaxNeighbors = 4;
+        /// <summary>
+        /// количество соседей, при котором в мертвой клетке зарождается жизнь
+        /// </summary>
+        int NeighborsBornNew = 3;
+        /// <summary>
         /// Риск внезапной смерти %
         /// </summary>
         int SuddenDeathPercent = 7;
@@ -345,11 +357,11 @@ namespace Game_Of_Life
                         LifeTime[y, x]++;
                         alive++;
                     }
-                    if (state && (ncount == 4 || ncount == 3 || ncount == 2))
+                    if (state && (ncount <= MaxNeighbors && ncount >= MinNeighbors))
                     {
                         NextState[y, x] = true;
                     }
-                    if (state && (ncount > 4 || ncount < 2 || (LifeTime[y, x] == MaxTTL) || (sdrnd.Next(100) <= SuddenDeathPercent)))
+                    if (state && (ncount > MaxNeighbors || ncount < MinNeighbors || (LifeTime[y, x] == MaxTTL) || (sdrnd.Next(100) <= SuddenDeathPercent)))
                     {
                         dead++;
                         alive--;
@@ -358,7 +370,7 @@ namespace Game_Of_Life
                         LifeTime[y, x] = 0;
                         Changed = true;
                     }
-                    if (!state && ncount == 3)
+                    if (!state && ncount == NeighborsBornNew)
                     {
                         NextState[y, x] = true;
                         born++;
@@ -600,6 +612,21 @@ namespace Game_Of_Life
         private void ttl_ValueChanged(object sender, EventArgs e)
         {
             MaxTTL = (int)ttl.Value;
+        }
+
+        private void nmin_ValueChanged(object sender, EventArgs e)
+        {
+            MinNeighbors = (int)nmin.Value;
+        }
+
+        private void nmax_ValueChanged(object sender, EventArgs e)
+        {
+            MaxNeighbors = (int)nmax.Value;
+        }
+
+        private void numericUpDown3_ValueChanged(object sender, EventArgs e)
+        {
+            NeighborsBornNew = (int)newborn.Value;
         }
     }
 }
