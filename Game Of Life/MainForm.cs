@@ -454,30 +454,7 @@ namespace Game_Of_Life
                 Refresh();
             });
         }
-        /// <summary>
-        /// Рисует точку на поле
-        /// </summary>
-        /// <param name="ptr">Указатель на ряд пикселей картинки</param>
-        /// <param name="pixelNumber">Номер пикселя в ряду</param>
-        /// <param name="pixelValue">Жива ли клетка</param>
-        void SetBit(IntPtr ptr, int pixelNumber, bool pixelValue)
-        {
-            //вычисляем номер байта
-            int byteNumber = pixelNumber / 8;
-            //вычисляем номер бита в байте
-            int bitNumber = pixelNumber % 8;
-            byte b = Marshal.ReadByte(ptr, byteNumber);
-            //Модифицируем бит в зависимости от состояния клетки
-            if (pixelValue)
-            {
-                b |= (byte)(1 << bitNumber);
-            }
-            else
-            {
-                b &= (byte)(~(1 << bitNumber));
-            }
-            Marshal.WriteByte(ptr, byteNumber, b);
-        }
+
         /// <summary>
         /// Нажатие на кнопку Пуск
         /// </summary>
