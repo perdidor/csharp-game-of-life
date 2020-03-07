@@ -17,7 +17,6 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -140,7 +139,7 @@ namespace Game_Of_Life
         /// <summary>
         /// ОБъект картинки, изображающей поле
         /// </summary>
-        Bitmap CurrentBitMap;
+        DirectBitmap CurrentBitMap;
         /// <summary>
         /// кратность увеличения
         /// </summary>
@@ -161,7 +160,7 @@ namespace Game_Of_Life
             FieldHeight = pic.Height;
             FieldWidth = pic.Width;
             LifeTime = new int[FieldHeight, FieldWidth];
-            CurrentBitMap = new Bitmap(FieldWidth, FieldHeight, PixelFormat.Format1bppIndexed);
+            CurrentBitMap = new DirectBitmap(FieldWidth, FieldHeight);
             //zoomcb.SelectedIndex = 0;
             cpcb.SelectedIndex = 0;
             pic.MouseWheel += Pic_MouseWheel;
@@ -246,7 +245,7 @@ namespace Game_Of_Life
         private void ShowBitMap()
         {
             Size newSize = new Size((int)(CurrentBitMap.Width * zoomFactor), (int)(CurrentBitMap.Height * zoomFactor));
-            Bitmap tmpbitmap = new Bitmap(CurrentBitMap, newSize);
+            Bitmap tmpbitmap = new Bitmap(CurrentBitMap.Bitmap, newSize);
             pic.Width = tmpbitmap.Width;
             pic.Height = tmpbitmap.Height;
             pic.Image = tmpbitmap;
@@ -443,19 +442,14 @@ namespace Game_Of_Life
             //делаем инвок для синхронизации доступа в поток GUI
             Instance.Invoke((MethodInvoker)delegate
             {
-                BitmapData data = CurrentBitMap.LockBits(new Rectangle(0, 0, CurrentBitMap.Width, CurrentBitMap.Height),
-                ImageLockMode.WriteOnly, CurrentBitMap.PixelFormat);
                 for (int y = 0; y < CurrentBitMap.Height; y++)
                 {
-                    //извлекаем указатель на ряд пикселей
-                    IntPtr linePtr = new IntPtr(data.Scan0.ToInt32() + data.Stride * y);
                     for (int x = 0; x < CurrentBitMap.Width; x++)
                     {
-                        //Вызываем метод для отображения текущего состояния клетки на картинке
-                        SetBit(linePtr, x, CurrentState[y, x]);
+
+                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? Color.FromArgb(255, 255, 255, 255) : Color.FromArgb(255, 0, 0, 0));
                     }
                 }
-                CurrentBitMap.UnlockBits(data);
                 ShowBitMap();
                 Refresh();
             });
