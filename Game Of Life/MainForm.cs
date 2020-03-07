@@ -222,7 +222,7 @@ namespace Game_Of_Life
             {
                 if (e.Delta > 3)
                 {
-                    if (zoomFactor < 4) zoomFactor++;
+                    if (zoomFactor < 5) zoomFactor++;
                     if (seedcomplete && suspended)
                     {
                         ShowBitMap();
@@ -358,8 +358,7 @@ namespace Game_Of_Life
                 {
                     for (int x = 0; x < FieldWidth; x++)
                     {
-                        byte nmask = GetNeighborsMask(y, x);
-                        int ncount = countSetBits((int)nmask);//получаем количество соседей из байта состояния
+                        int ncount = GetNeighborsMask(y, x);//получаем количество соседей из байта состояния
                         bool state = CurrentState[y, x];//текущее состояние клетки: true = жива
                         switch (state)
                         {
@@ -375,8 +374,7 @@ namespace Game_Of_Life
                                 || (LifeTime[y, x] >= MaxTTL)// старость
                                 || (sdrnd.NextDouble() * 100 <= SuddenDeathPercent))// Внезапная (случайная) смерть
                                 {
-                                    // если соседей меньше или больше заданного количества, клетка умирает «от одиночества» или «от перенаселённости»,
-                                    // а так же есть риск внезапной смерти (SuddenDeathPercent) и максимальное время жизни (MaxTTL)
+                                    // клетка умирает
                                     dead++;
                                     alive--;
                                     NextState[y, x] = false;
@@ -384,20 +382,21 @@ namespace Game_Of_Life
                                 }
                                 else
                                 {
-                                    // в остальных случаях все нормально и клетка продолжает жить
+                                    // клетка продолжает жить
                                     NextState[y, x] = true;
                                 }
                                 break;
                             case false:// клетка мертва на текущем шаге
                                 if (!state && ncount == NeighborsBornNew)
                                 {
-                                    //в пустой (мёртвой) клетке, рядом с которой определенное количество живых клеток, зарождается жизнь
+                                    // в пустой (мёртвой) клетке, рядом с которой определенное количество живых клеток, зарождается жизнь
                                     // TODO: назначить окружающим клеткам выплату материнского капитала, ускорить старение "многодетных" клеток и т. д...
                                     NextState[y, x] = true;
                                     born++;
                                 }
                                 else
                                 {
+                                    // клетка остается мертвой
                                     NextState[y, x] = false;
                                 }
                                 break;
@@ -412,44 +411,30 @@ namespace Game_Of_Life
         }
 
         /// <summary>
-        /// Находит соседей указанной клетки
+        /// Находит соседей указанной клетки и возвращает их количество
         /// </summary>
         /// <param name="y">координата y указанной клетки</param>
         /// <param name="x">координата x указанной клетки</param>
         /// <returns>1 байт с битовой маской соседей указанной клетки, начинай с левой верхней</returns>
-        private byte GetNeighborsMask(int y, int x)
+        private int GetNeighborsMask(int y, int x)
         {
-            byte res = 0x00;
+            int res = 0;
             //Противоположные края поля замкнуты друг на друга, т.е.при переходе через границы точка уходит на противоположную сторону картинки
             var Yinc = (y + 1) % FieldHeight;//инкрементированное значение координаты Y
             var Ydec = (FieldHeight + y - 1) % FieldHeight;//декрементированное значение координаты Y
             var Xinc = (x + 1) % FieldWidth;//инкрементированное значение координаты X
             var Xdec = (FieldWidth + x - 1) % FieldWidth;//декрементированное значение координаты X
-            if (CurrentState[Yinc, Xdec]) res |= (1 << 0);
-            if (CurrentState[Yinc, (x)]) res |= (1 << 1);
-            if (CurrentState[Yinc, Xinc]) res |= (1 << 2);
-            if (CurrentState[(y), Xdec]) res |= (1 << 3);
-            if (CurrentState[(y), Xinc]) res |= (1 << 4);
-            if (CurrentState[Ydec, Xdec]) res |= (1 << 5);
-            if (CurrentState[Ydec, (x)]) res |= (1 << 6);
-            if (CurrentState[Ydec, Xinc]) res |= (1 << 7);
+            if (CurrentState[Yinc, Xdec]) res++;
+            if (CurrentState[Yinc, (x)]) res++;
+            if (CurrentState[Yinc, Xinc]) res++;
+            if (CurrentState[(y), Xdec]) res++;
+            if (CurrentState[(y), Xinc]) res++;
+            if (CurrentState[Ydec, Xdec]) res++;
+            if (CurrentState[Ydec, (x)]) res++;
+            if (CurrentState[Ydec, Xinc]) res++;
             return res;
         }
-        /// <summary>
-        /// Считает число соседей
-        /// </summary>
-        /// <param name="n">1 байт с битовой маской соседей указанной клетки, начинай с левой верхней</param>
-        /// <returns></returns>
-        static int countSetBits(int n)
-        {
-            int count = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                if (((n >> i) & 0x01) == 1)
-                    count++;
-            }
-            return count;
-        }
+
         /// <summary>
         /// Рисуем картинку из объекта текущего состояния
         /// </summary>
