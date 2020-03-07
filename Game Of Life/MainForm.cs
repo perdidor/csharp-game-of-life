@@ -26,6 +26,7 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -136,7 +137,7 @@ namespace Game_Of_Life
         /// <summary>
         /// Плотность живых клеток при начальном заполнении
         /// </summary>
-        private int InitialDensityPercent = 2;
+        private int InitialDensityPercent = 0;
         /// <summary>
         /// Двумерный массив текущего состояния
         /// </summary>
@@ -159,6 +160,10 @@ namespace Game_Of_Life
         /// </summary>
         private static CancellationTokenSource CTS;
 
+        // для рисования
+        Point lastPoint = Point.Empty;
+        bool isMouseDown = new Boolean();
+
         /// <summary>
         /// Запуск приложения
         /// </summary>
@@ -176,8 +181,6 @@ namespace Game_Of_Life
             //zoomcb.SelectedIndex = 0;
             cpcb.SelectedIndex = 0;
             pic.MouseWheel += Pic_MouseWheel;
-            ShowBitMap();
-            Refresh();
             ChartPoints = Convert.ToInt16(cpcb.Items[0].ToString());
             // подключаем обработчик события изменения положения ползунка (если подключить раньше или в свойствах контрола, будет 
             // ошибка на две строки ранее при изменении индекса)
@@ -220,6 +223,7 @@ namespace Game_Of_Life
                         PauseButton.Enabled = false;
                         RunButton.Enabled = true;
                         RunOneStepButton.Enabled = true;
+                        ResetButton.Enabled = true;
                         FillingPercentileTracker.Enabled = true;
                     }
                 }
@@ -264,6 +268,7 @@ namespace Game_Of_Life
             pic.Width = tmpbitmap.Width;
             pic.Height = tmpbitmap.Height;
             pic.Image = tmpbitmap;
+            pic.Refresh();
             panel1.VerticalScroll.Visible = (pic.Height > panel1.Height);
             panel1.HorizontalScroll.Visible = (pic.Width > panel1.Width);
             zoomlabel.Text = string.Format("x{0}", zoomFactor);
@@ -277,25 +282,64 @@ namespace Game_Of_Life
             int alive = 0;
             MaxAlive = 0;
             MinAlive = 0;
-            for (int y = 0; y < FieldHeight; y++)
+            if (CurrentState.Length == 0)
+                CurrentState = new bool[FieldHeight, FieldWidth];
+            if (InitialDensityPercent > 0)
             {
-                Random rnd = new Random(Guid.NewGuid().GetHashCode());
-                for (int x = 0; x < FieldWidth; x++)
+                for (int y = 0; y < FieldHeight; y++)
                 {
-                    CurrentState[y, x] = (rnd.Next(100) <= InitialDensityPercent);
-                    if (CurrentState[y, x])
+                    Random rnd = new Random(Guid.NewGuid().GetHashCode());
+                    for (int x = 0; x < FieldWidth; x++)
                     {
-                        alive++;
-                        MaxAlive++;
-                        MinAlive++;
+                        CurrentState[y, x] = (rnd.Next(100) <= InitialDensityPercent);
+                        if (CurrentState[y, x])
+                        {
+                            alive++;
+                            MaxAlive++;
+                            MinAlive++;
+                        }
+                        LifeTime[y, x] = -1;
                     }
-                    LifeTime[y, x] = -1;
+                }
+            } else
+            {
+                CurrentState = new bool[FieldHeight, FieldWidth];
+                for (int y = 0; y < FieldHeight; y++)
+                {
+                    for (int x = 0; x < FieldWidth; x++)
+                    {
+
+                        LifeTime[y, x] = -1;
+                    }
                 }
             }
             MaxBorn = 0;
             MinBorn = 999999999;
             MaxDead = 0;
             MinDead = 999999999;
+            movenumber = 0;
+            movelabel.Text = string.Format("Move# {0}", movenumber);
+            bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", 0, MaxBorn, MinBorn);
+            deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", 0, MaxDead, MinDead);
+            alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", 0, MaxAlive, MinAlive);
+            DrawBitmap();
+            if (InitialDensityPercent == 0)
+            {
+                RunButton.Enabled = false;
+                RunOneStepButton.Enabled = false;
+                ResetButton.Enabled = false;
+                seedcomplete = false;
+            }
+            else
+            {
+                if (!seedcomplete)
+                {
+                    RunButton.Enabled = true;
+                    RunOneStepButton.Enabled = true;
+                    ResetButton.Enabled = true;
+                    seedcomplete = true;
+                }
+            }
         }
         /// <summary>
         /// Трансформация текущего состояния по правилам
@@ -497,6 +541,7 @@ namespace Game_Of_Life
             RunButton.Enabled = false;
             RunOneStepButton.Enabled = false;
             FillingPercentileTracker.Enabled = false;
+            ResetButton.Enabled = false;
             //снимаем флаг паузы
             suspended = false;
         }
@@ -512,6 +557,7 @@ namespace Game_Of_Life
             RunButton.Enabled = true;
             RunOneStepButton.Enabled = true;
             FillingPercentileTracker.Enabled = true;
+            ResetButton.Enabled = true;
             //устанавливаем флаг паузы
             suspended = true;
         }
@@ -530,18 +576,6 @@ namespace Game_Of_Life
             CurrentState = new bool[FieldHeight, FieldWidth];
             NextState = new bool[FieldHeight, FieldWidth];
             InitialSeed();
-            movenumber = 0;
-            movelabel.Text = string.Format("Move# {0}", movenumber);
-            bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", 0, MaxBorn, MinBorn);
-            deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", 0, MaxDead, MinDead);
-            alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", 0, MaxAlive, MinAlive);
-            DrawBitmap();
-            if (!seedcomplete)
-            {
-                RunButton.Enabled = true;
-                RunOneStepButton.Enabled = true;
-                seedcomplete = true;
-            }
         }
         /// <summary>
         /// Нажатие кнопки пошагового выполнения
@@ -555,6 +589,7 @@ namespace Game_Of_Life
             RunButton.Enabled = false;
             RunOneStepButton.Enabled = false;
             FillingPercentileTracker.Enabled = false;
+            ResetButton.Enabled = false;
             //устанавливаем признак одного шага
             OneStep = true;
             //снимаем флаг паузы
@@ -608,6 +643,72 @@ namespace Game_Of_Life
         private void numericUpDown3_ValueChanged(object sender, EventArgs e)
         {
             NeighborsBornNew = (int)newborn.Value;
+        }
+
+        private void pic_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!suspended || zoomFactor != 1)
+                return;
+            if (isMouseDown == true)
+            {
+                if (lastPoint != null)
+                {
+                    using (Graphics g = Graphics.FromImage(pic.Image))
+                    {
+                        g.DrawLine(new Pen(Color.FromArgb(255, 255, 255, 255), 1), lastPoint, e.Location);
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                    }
+                    pic.Invalidate();
+                    lastPoint = e.Location;
+                }
+            }
+        }
+
+        private void pic_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (zoomFactor != 1)
+                return;
+            lastPoint = e.Location;
+            isMouseDown = true;
+        }
+
+        private void pic_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (zoomFactor != 1)
+                return;
+            var bm = (Bitmap)pic.Image;
+            isMouseDown = false;
+            lastPoint = Point.Empty;
+            for (int y = 0; y < pic.Height; y++)
+            {
+                for (int x = 0; x < pic.Width; x++)
+                {
+                    CurrentState[y, x] = (bm.GetPixel(x, y) != Color.FromArgb(255, 0, 0, 0));
+                }
+            }
+            if (!RunButton.Enabled)
+            {
+                RunButton.Enabled = true;
+                RunOneStepButton.Enabled = true;
+                ResetButton.Enabled = true;
+            }
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            InitialSeed();
+            DrawBitmap();
+            Refresh();
+        }
+
+        private void ResetButton_Click(object sender, EventArgs e)
+        {
+            InitialSeed();
+            DrawBitmap();
+            chart.Series[0].Points.Clear();
+            chart.Series[1].Points.Clear();
+            chart.Series[2].Points.Clear();
+            Refresh();
         }
     }
 }

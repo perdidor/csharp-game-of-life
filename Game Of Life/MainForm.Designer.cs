@@ -64,6 +64,7 @@
             this.nmax = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.nmin = new System.Windows.Forms.NumericUpDown();
+            this.ResetButton = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -84,9 +85,9 @@
             // 
             this.RunButton.Enabled = false;
             this.RunButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.RunButton.Location = new System.Drawing.Point(700, 230);
+            this.RunButton.Location = new System.Drawing.Point(722, 229);
             this.RunButton.Name = "RunButton";
-            this.RunButton.Size = new System.Drawing.Size(135, 23);
+            this.RunButton.Size = new System.Drawing.Size(115, 23);
             this.RunButton.TabIndex = 1;
             this.RunButton.Text = "Run Life";
             this.RunButton.UseVisualStyleBackColor = true;
@@ -106,7 +107,7 @@
             this.alivelabel});
             this.statusStrip1.Location = new System.Drawing.Point(0, 0);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1009, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1084, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -154,9 +155,9 @@
             // PauseButton
             // 
             this.PauseButton.Enabled = false;
-            this.PauseButton.Location = new System.Drawing.Point(922, 230);
+            this.PauseButton.Location = new System.Drawing.Point(925, 229);
             this.PauseButton.Name = "PauseButton";
-            this.PauseButton.Size = new System.Drawing.Size(75, 23);
+            this.PauseButton.Size = new System.Drawing.Size(69, 23);
             this.PauseButton.TabIndex = 4;
             this.PauseButton.Text = "Pause";
             this.PauseButton.UseVisualStyleBackColor = true;
@@ -165,9 +166,9 @@
             // RunOneStepButton
             // 
             this.RunOneStepButton.Enabled = false;
-            this.RunOneStepButton.Location = new System.Drawing.Point(841, 230);
+            this.RunOneStepButton.Location = new System.Drawing.Point(844, 229);
             this.RunOneStepButton.Name = "RunOneStepButton";
-            this.RunOneStepButton.Size = new System.Drawing.Size(75, 23);
+            this.RunOneStepButton.Size = new System.Drawing.Size(69, 23);
             this.RunOneStepButton.TabIndex = 7;
             this.RunOneStepButton.Text = "Move >|";
             this.RunOneStepButton.UseVisualStyleBackColor = true;
@@ -199,7 +200,7 @@
             this.chart.Series.Add(series4);
             this.chart.Series.Add(series5);
             this.chart.Series.Add(series6);
-            this.chart.Size = new System.Drawing.Size(1009, 148);
+            this.chart.Size = new System.Drawing.Size(1084, 148);
             this.chart.TabIndex = 10;
             // 
             // groupBox1
@@ -209,7 +210,7 @@
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.Location = new System.Drawing.Point(0, 183);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(183, 70);
+            this.groupBox1.Size = new System.Drawing.Size(205, 70);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Initial seed filling %";
@@ -218,7 +219,7 @@
             // 
             this.seedpercent.AutoSize = true;
             this.seedpercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.seedpercent.Location = new System.Drawing.Point(162, 30);
+            this.seedpercent.Location = new System.Drawing.Point(181, 30);
             this.seedpercent.Name = "seedpercent";
             this.seedpercent.Size = new System.Drawing.Size(14, 13);
             this.seedpercent.TabIndex = 10;
@@ -226,10 +227,10 @@
             // 
             // FillingPercentileTracker
             // 
-            this.FillingPercentileTracker.Location = new System.Drawing.Point(6, 19);
+            this.FillingPercentileTracker.Location = new System.Drawing.Point(12, 19);
             this.FillingPercentileTracker.Maximum = 100;
             this.FillingPercentileTracker.Name = "FillingPercentileTracker";
-            this.FillingPercentileTracker.Size = new System.Drawing.Size(150, 45);
+            this.FillingPercentileTracker.Size = new System.Drawing.Size(163, 45);
             this.FillingPercentileTracker.TabIndex = 7;
             this.FillingPercentileTracker.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
             // 
@@ -244,16 +245,16 @@
             "300",
             "500",
             "1000"});
-            this.cpcb.Location = new System.Drawing.Point(700, 202);
+            this.cpcb.Location = new System.Drawing.Point(722, 201);
             this.cpcb.Name = "cpcb";
-            this.cpcb.Size = new System.Drawing.Size(121, 21);
+            this.cpcb.Size = new System.Drawing.Size(115, 21);
             this.cpcb.TabIndex = 12;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(700, 183);
+            this.label1.Location = new System.Drawing.Point(722, 182);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(79, 13);
             this.label1.TabIndex = 13;
@@ -263,7 +264,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label2.Location = new System.Drawing.Point(876, 183);
+            this.label2.Location = new System.Drawing.Point(898, 182);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(79, 13);
             this.label2.TabIndex = 15;
@@ -276,22 +277,25 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel1.Location = new System.Drawing.Point(0, 259);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1009, 565);
+            this.panel1.Size = new System.Drawing.Size(1084, 565);
             this.panel1.TabIndex = 16;
             // 
             // pic
             // 
             this.pic.Location = new System.Drawing.Point(0, 0);
             this.pic.Name = "pic";
-            this.pic.Size = new System.Drawing.Size(1009, 565);
+            this.pic.Size = new System.Drawing.Size(1084, 565);
             this.pic.TabIndex = 1;
             this.pic.TabStop = false;
+            this.pic.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pic_MouseDown);
+            this.pic.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pic_MouseMove);
+            this.pic.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pic_MouseUp);
             // 
             // zoomlabel
             // 
             this.zoomlabel.AutoSize = true;
             this.zoomlabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.zoomlabel.Location = new System.Drawing.Point(876, 205);
+            this.zoomlabel.Location = new System.Drawing.Point(898, 204);
             this.zoomlabel.Name = "zoomlabel";
             this.zoomlabel.Size = new System.Drawing.Size(0, 13);
             this.zoomlabel.TabIndex = 17;
@@ -300,9 +304,9 @@
             // 
             this.groupBox2.Controls.Add(this.sdprob);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.groupBox2.Location = new System.Drawing.Point(189, 189);
+            this.groupBox2.Location = new System.Drawing.Point(211, 188);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(119, 64);
+            this.groupBox2.Size = new System.Drawing.Size(113, 64);
             this.groupBox2.TabIndex = 18;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Sudden Death %";
@@ -325,9 +329,9 @@
             // 
             this.groupBox3.Controls.Add(this.ttl);
             this.groupBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.groupBox3.Location = new System.Drawing.Point(314, 189);
+            this.groupBox3.Location = new System.Drawing.Point(336, 188);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(88, 64);
+            this.groupBox3.Size = new System.Drawing.Size(82, 64);
             this.groupBox3.TabIndex = 19;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Max TTL";
@@ -355,9 +359,9 @@
             this.groupBox4.Controls.Add(this.label3);
             this.groupBox4.Controls.Add(this.nmin);
             this.groupBox4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.groupBox4.Location = new System.Drawing.Point(408, 189);
+            this.groupBox4.Location = new System.Drawing.Point(430, 188);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(286, 64);
+            this.groupBox4.Size = new System.Drawing.Size(280, 64);
             this.groupBox4.TabIndex = 20;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Neighbors";
@@ -461,10 +465,22 @@
             0});
             this.nmin.ValueChanged += new System.EventHandler(this.nmin_ValueChanged);
             // 
+            // ResetButton
+            // 
+            this.ResetButton.Enabled = false;
+            this.ResetButton.Location = new System.Drawing.Point(1003, 229);
+            this.ResetButton.Name = "ResetButton";
+            this.ResetButton.Size = new System.Drawing.Size(69, 23);
+            this.ResetButton.TabIndex = 21;
+            this.ResetButton.Text = "Reset";
+            this.ResetButton.UseVisualStyleBackColor = true;
+            this.ResetButton.Click += new System.EventHandler(this.ResetButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(1009, 824);
+            this.ClientSize = new System.Drawing.Size(1084, 824);
+            this.Controls.Add(this.ResetButton);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -484,6 +500,7 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Game Of Life";
+            this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
@@ -539,6 +556,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.NumericUpDown nmax;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button ResetButton;
     }
 }
 
