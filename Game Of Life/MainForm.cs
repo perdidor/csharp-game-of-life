@@ -183,8 +183,8 @@ namespace Game_Of_Life
                     }
                     try
                     {
-                        Transform();
                         DrawBitmap();
+                        Transform();
                     }
                     catch (Exception ex)
                     {
@@ -364,7 +364,9 @@ namespace Game_Of_Life
                             case true:// клетка жива на текущем шаге
                                 LifeTime[y, x]++;
                                 alive++;
-                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (LifeTime[y, x] / MaxTTL) : 1) * 1.00 : 0;// риск внезапной смерти растет с возрастом клетки
+                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (0.5 + LifeTime[y, x] / (2 * MaxTTL)) : 1) * 1.00 : 0;
+                                // риск внезапной смерти растет с возрастом клетки, от половины заданного
+                                // значения в начале жизни до 100% в конце (если задан максимальный срок). Если не задан, риск внезапной смерти постоянный на протяжении всей жизни клетки
 
                                 // проверяем смертельные факторы, если хоть один сработал - клетке пиздец
                                 // TODO: назначить старым клеткам пенсию и поиграть с ее выдачей и пенсионным возрастом
@@ -392,6 +394,7 @@ namespace Game_Of_Life
                                     // TODO: назначить окружающим клеткам выплату материнского капитала, ускорить старение "многодетных" клеток и т. д...
                                     NextState[y, x] = true;
                                     born++;
+                                    LifeTime[y, x] = 0;
                                 }
                                 else
                                 {
@@ -447,7 +450,8 @@ namespace Game_Of_Life
                     for (int x = 0; x < CurrentBitMap.Width; x++)
                     {
 
-                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? Color.FromArgb(255, 255, 255, 255) : Color.FromArgb(255, 0, 0, 0));
+                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? (LifeTime[y, x] == 0 ? Color.FromArgb(255, 0, 0, 255) : Color.FromArgb(255, 0, 255, 0)) : (LifeTime[y, x] == 0 ? Color.FromArgb(255, 255, 0, 0) : Color.FromArgb(255, 0, 0, 0)));
+                        if (!CurrentState[y, x] && LifeTime[y, x] == 0) LifeTime[y, x] = -1;
                     }
                 }
                 ShowBitMap();
