@@ -5,10 +5,11 @@
 //в пустой(мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
 //если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, если соседей меньше двух или больше трёх, клетка умирает(«от одиночества» 
 //или «от перенаселённости»)
-//Игра прекращается, если
+//также в игру введены дополнительные условия выживания клетки: максимальное время жизни и риск внезпаной смерти
+//Игра прекращается, если:
 //на поле не останется ни одной «живой» клетки - РЕАЛИЗОВАНО
-//НЕ РЕАЛИЗОВАНО - конфигурация на очередном шаге в точности(без сдвигов и поворотов) повторит себя же на одном из более ранних шагов(складывается периодическая конфигурация) - НЕ РЕАЛИЗОВАНО
-//НЕ РЕАЛИЗОВАНО - при очередном шаге ни одна из клеток не меняет своего состояния(складывается стабильная конфигурация; предыдущее правило, вырожденное до одного шага назад) - НЕ РЕАЛИЗОВАНО
+//конфигурация на очередном шаге в точности(без сдвигов и поворотов) повторит себя же на одном из более ранних шагов(складывается периодическая конфигурация) - НЕ РЕАЛИЗОВАНО
+//при очередном шаге ни одна из клеток не меняет своего состояния(складывается стабильная конфигурация; предыдущее правило, вырожденное до одного шага назад) - РЕАЛИЗОВАНО
 //Эти простые правила приводят к огромному разнообразию форм, которые могут возникнуть в игре.
 //Игрок не принимает прямого участия в игре, а лишь расставляет или генерирует начальную конфигурацию «живых» клеток, которые затем взаимодействуют согласно правилам уже без его 
 //участия (он является наблюдателем).
@@ -18,16 +19,25 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Game_Of_Life
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
-        ///родится на следующем шаге, умрет на следующем шаге и текущее число живых
+        /// <summary>
+        /// Родилось клеток
+        /// </summary>
         int born = 0;
+        /// <summary>
+        /// Умерло клеток
+        /// </summary>
         int dead = 0;
+        /// <summary>
+        /// Живых клеток
+        /// </summary>
         int alive = 0;
         /// <summary>
         /// минимальное количество соседей для выживания
@@ -102,15 +112,7 @@ namespace Game_Of_Life
         /// <summary>
         /// Аксессор для экземпляра формы
         /// </summary>
-        private Form1 Instance;
-        /// <summary>
-        /// Черная кисть для мертвых клеток
-        /// </summary>
-        private Brush BlackBrush = new SolidBrush(Color.Black);
-        /// <summary>
-        /// Белая кисть для живых клеток
-        /// </summary>
-        private Brush WhiteBrush = new SolidBrush(Color.White);
+        private MainForm Instance;
         /// <summary>
         /// Высота поля
         /// </summary>
@@ -144,11 +146,12 @@ namespace Game_Of_Life
         /// </summary>
         int zoomFactor = 1;
 
+        private static CancellationTokenSource CTS;
 
         /// <summary>
         /// Запуск приложения
         /// </summary>
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             //инициализируем переменные
@@ -169,39 +172,42 @@ namespace Game_Of_Life
             cpcb.SelectedIndexChanged += cpcb_SelectedIndexChanged;
             //Выбираем максимальное значение, доступное в выпаджающем списке (должен быть отсортирован по возрастанию)
             MaxChartPoints = Convert.ToInt32(cpcb.Items[cpcb.Items.Count - 1].ToString());
-            //запускаем асинхронную задачу пошаговой трансформации поля в фоне
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+            //запускаем асинхронную задачу пошаговой трансформации поля в фоновом потоке
             Task.Run(() => {
-                try
+                while (true)
                 {
-                    while (true)
+                    //если флаг паузы выставлен в true, ждем и проверяем через каждые 100мс
+                    while (suspended)
                     {
-                        //если флаг паузы выставлен в true, ждем и проверяем через каждые 100мс
-                        while (suspended)
-                        {
-                            Task.Delay(100);
-                        }
+                        Task.Delay(100);
+                    }
+                    try
+                    {
                         Transform();
                         DrawBitmap();
-                        movenumber++;
-                        //проверяем признак одного шага
-                        if (OneStep)
-                        {
-                            //снимаем флаг одного шага
-                            OneStep = false;
-                            //Устанавливаем флаг паузы
-                            suspended = true;
-                            //делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
-                            button2.Enabled = false;
-                            button1.Enabled = true;
-                            button3.Enabled = true;
-                            trackBar1.Enabled = true;
-                        }
                     }
-                }
-                catch
-                {
-
+                    catch (Exception ex)
+                    {
+                        Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+                        {
+                            MessageBox.Show(Instance, string.Format("Ошибка на шаге {0}: {1}{2}{3}", movenumber, ex.Message, Environment.NewLine, ex.InnerException?.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        });
+                    }
+                    movenumber++;
+                    //проверяем признак пошагового выполнения
+                    if (OneStep)
+                    {
+                        //снимаем флаг пошагового выполнения
+                        OneStep = false;
+                        //Устанавливаем флаг паузы
+                        suspended = true;
+                        //делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
+                        PauseButton.Enabled = false;
+                        RunButton.Enabled = true;
+                        RunOneStepButton.Enabled = true;
+                        FillingPercentileTracker.Enabled = true;
+                    }
                 }
             });
         }
@@ -279,7 +285,7 @@ namespace Game_Of_Life
         /// <summary>
         /// Трансформация текущего состояния по правилам
         /// </summary>
-        private async void Transform()
+        private void Transform()
         {
             born = 0;
             dead = 0;
@@ -287,12 +293,13 @@ namespace Game_Of_Life
             Changed = false;
             NextState = new bool[FieldHeight, FieldWidth];
             int divider = (int)(FieldHeight / 2);
+            CTS = new CancellationTokenSource();
             //обсчитывать трансформацию будем в два параллельных потока
             //создаем массив асинхронных задач, делим поле пополам
-            var task1 = ProcessTransform(0, divider);
-            var task2 = ProcessTransform(divider, FieldHeight);
-            await Task.WhenAll(task1, task2);
-            Instance.Invoke((MethodInvoker)delegate
+            var task1 = Task.Run(() => ProcessTransform(0, divider), CTS.Token);
+            var task2 = Task.Run(() => ProcessTransform(divider, FieldHeight), CTS.Token);
+            Task.WhenAll(task1, task2).Wait();//дожидаемся конца выполнения всех потоков
+            Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
             {
                 if (alive > MaxAlive) MaxAlive = alive;
                 if (alive < MinAlive) MinAlive = alive;
@@ -329,61 +336,83 @@ namespace Game_Of_Life
             {
                 //Есть изменения, копируем состояние следующего шага в текущий массив
                 Array.Copy(NextState, CurrentState, NextState.Length);
-            } else
+            }
+            else
             {
                 //Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
-                suspended = true;
-                MessageBox.Show(string.Format("Life freezed with no change at move# {0}", movenumber),"Information",MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+                {
+                    CTS.Cancel();
+                    button2_Click(null, null);//нажимаем кнопку "Пауза"
+                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
             }
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async Task<bool> ProcessTransform(int from, int to)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            Random sdrnd = new Random(Guid.NewGuid().GetHashCode());
-            for (int y = from; y < to; y++)
+            await Task.Run(() =>
             {
-                for (int x = 0; x < FieldWidth; x++)
+                Random sdrnd = new Random(Guid.NewGuid().GetHashCode());
+                for (int y = from; y < to; y++)
                 {
-                    byte nmask = GetNeighborsMask(y, x);
-                    int ncount = countSetBits((int)nmask);
-                    // 1. в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
-                    // 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, 
-                    // если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
-                    bool state = CurrentState[y, x];
-                    if (state)
+                    for (int x = 0; x < FieldWidth; x++)
                     {
-                        LifeTime[y, x]++;
-                        alive++;
-                    }
-                    if (state && (ncount <= MaxNeighbors && ncount >= MinNeighbors))
-                    {
-                        NextState[y, x] = true;
-                    }
-                    if (state && (ncount > MaxNeighbors || ncount < MinNeighbors || (LifeTime[y, x] == MaxTTL) || (sdrnd.Next(100) <= SuddenDeathPercent)))
-                    {
-                        dead++;
-                        alive--;
-                        NextState[y, x] = false;
-                        CurrentState[y, x] = false;
-                        LifeTime[y, x] = 0;
-                        Changed = true;
-                    }
-                    if (!state && ncount == NeighborsBornNew)
-                    {
-                        NextState[y, x] = true;
-                        born++;
-                        Changed = true;
+                        byte nmask = GetNeighborsMask(y, x);
+                        int ncount = countSetBits((int)nmask);//получаем количество соседей из байта состояния
+                        bool state = CurrentState[y, x];//текущее состояние клетки: true = жива
+                        switch (state)
+                        {
+                            case true:// клетка жива на текущем шаге
+                                LifeTime[y, x]++;
+                                alive++;
+                                var CurrentSuddenDeathRisk = SuddenDeathPercent * (LifeTime[y, x] / MaxTTL) * 1.00;// риск внезапной смерти растет с возрастом клетки
+
+                                // проверяем смертельные факторы, если хоть один сработал - клетке пиздец
+                                // TODO: назначить старым клеткам пенсию и поиграть с ее выдачей и пенсионным возрастом
+                                if (ncount > MaxNeighbors// перенаселённость
+                                || ncount < MinNeighbors// одиночество
+                                || (LifeTime[y, x] >= MaxTTL)// старость
+                                || (sdrnd.NextDouble() * 100 <= SuddenDeathPercent))// Внезапная (случайная) смерть
+                                {
+                                    // если соседей меньше или больше заданного количества, клетка умирает «от одиночества» или «от перенаселённости»,
+                                    // а так же есть риск внезапной смерти (SuddenDeathPercent) и максимальное время жизни (MaxTTL)
+                                    dead++;
+                                    alive--;
+                                    NextState[y, x] = false;
+                                    LifeTime[y, x] = 0;
+                                }
+                                else
+                                {
+                                    // в остальных случаях все нормально и клетка продолжает жить
+                                    NextState[y, x] = true;
+                                }
+                                break;
+                            case false:// клетка мертва на текущем шаге
+                                if (!state && ncount == NeighborsBornNew)
+                                {
+                                    //в пустой (мёртвой) клетке, рядом с которой определенное количество живых клеток, зарождается жизнь
+                                    // TODO: назначить окружающим клеткам выплату материнского капитала, ускорить старение "многодетных" клеток и т. д...
+                                    NextState[y, x] = true;
+                                    born++;
+                                }
+                                else
+                                {
+                                    NextState[y, x] = false;
+                                }
+                                break;
+                        }
+                        // Вычисляем есть ли разница между текущим и следующим шагом с помощью логического ИЛИ
+                        // (достаточно одного изменения в массиве, чтобы итоговое значение было Changed == true)
+                        Changed |= CurrentState[y, x] != NextState[y, x];
                     }
                 }
-            }
+            });
             return true;
         }
 
         /// <summary>
         /// Находит соседей указанной клетки
-        /// Противоположные края поля замкнуты друг на друга, т.е. при переходе через границы точка уходит на противоположную сторону картинки
         /// </summary>
         /// <param name="y">координата y указанной клетки</param>
         /// <param name="x">координата x указанной клетки</param>
@@ -391,54 +420,19 @@ namespace Game_Of_Life
         private byte GetNeighborsMask(int y, int x)
         {
             byte res = 0x00;
-            //клетка НЕ находится на краю поля
-            if (y > 0 && x > 0)
-            {
-                if (CurrentState[(y - 1) % FieldHeight, (x - 1) % FieldWidth]) res |= (1 << 0);
-                if (CurrentState[(y - 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 1);
-                if (CurrentState[(y - 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 2);
-                if (CurrentState[(y) % FieldHeight, (x - 1) % FieldWidth]) res |= (1 << 3);
-                if (CurrentState[(y) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 4);
-                if (CurrentState[(y + 1) % FieldHeight, (x - 1) % FieldWidth]) res |= (1 << 5);
-                if (CurrentState[(y + 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 6);
-                if (CurrentState[(y + 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 7);
-            }
-            //клетка находится на левом краю поля
-            if (x == 0 && y > 0)
-            {
-                if (CurrentState[(y - 1) % FieldHeight, FieldWidth - 1]) res |= (1 << 0);
-                if (CurrentState[(y - 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 1);
-                if (CurrentState[(y - 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 2);
-                if (CurrentState[(y) % FieldHeight, FieldWidth - 1]) res |= (1 << 3);
-                if (CurrentState[(y) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 4);
-                if (CurrentState[(y + 1) % FieldHeight, FieldWidth - 1]) res |= (1 << 5);
-                if (CurrentState[(y + 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 6);
-                if (CurrentState[(y + 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 7);
-            }
-            //клетка находится на верхнем краю поля
-            if (x > 0 && y == 0)
-            {
-                if (CurrentState[FieldHeight - 1 - y, (x - 1) % FieldWidth]) res |= (1 << 0);
-                if (CurrentState[FieldHeight - 1 - y, (x) % FieldWidth]) res |= (1 << 1);
-                if (CurrentState[FieldHeight - 1 - y, (x + 1) % FieldWidth]) res |= (1 << 2);
-                if (CurrentState[(y) % FieldHeight, (x - 1) % FieldWidth]) res |= (1 << 3);
-                if (CurrentState[(y) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 4);
-                if (CurrentState[(y + 1) % FieldHeight, (x - 1) % FieldWidth]) res |= (1 << 5);
-                if (CurrentState[(y + 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 6);
-                if (CurrentState[(y + 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 7);
-            }
-            //клетка находится в левом верхнем углу
-            if (x == 0 && y == 0)
-            {
-                if (CurrentState[FieldHeight - 1 - y, FieldWidth - 1]) res |= (1 << 0);
-                if (CurrentState[FieldHeight - 1 - y, (x) % FieldWidth]) res |= (1 << 1);
-                if (CurrentState[FieldHeight - 1 - y, (x + 1) % FieldWidth]) res |= (1 << 2);
-                if (CurrentState[(y) % FieldHeight, FieldWidth - 1]) res |= (1 << 3);
-                if (CurrentState[(y) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 4);
-                if (CurrentState[(y + 1) % FieldHeight, FieldWidth - 1]) res |= (1 << 5);
-                if (CurrentState[(y + 1) % FieldHeight, (x) % FieldWidth]) res |= (1 << 6);
-                if (CurrentState[(y + 1) % FieldHeight, (x + 1) % FieldWidth]) res |= (1 << 7);
-            }
+            //Противоположные края поля замкнуты друг на друга, т.е.при переходе через границы точка уходит на противоположную сторону картинки
+            var Yinc = (y + 1) % FieldHeight;//инкрементированное значение координаты Y
+            var Ydec = (FieldHeight + y - 1) % FieldHeight;//декрементированное значение координаты Y
+            var Xinc = (x + 1) % FieldWidth;//инкрементированное значение координаты X
+            var Xdec = (FieldWidth + x - 1) % FieldWidth;//декрементированное значение координаты X
+            if (CurrentState[Yinc, Xdec]) res |= (1 << 0);
+            if (CurrentState[Yinc, (x)]) res |= (1 << 1);
+            if (CurrentState[Yinc, Xinc]) res |= (1 << 2);
+            if (CurrentState[(y), Xdec]) res |= (1 << 3);
+            if (CurrentState[(y), Xinc]) res |= (1 << 4);
+            if (CurrentState[Ydec, Xdec]) res |= (1 << 5);
+            if (CurrentState[Ydec, (x)]) res |= (1 << 6);
+            if (CurrentState[Ydec, Xinc]) res |= (1 << 7);
             return res;
         }
         /// <summary>
@@ -449,10 +443,10 @@ namespace Game_Of_Life
         static int countSetBits(int n)
         {
             int count = 0;
-            while (n > 0)
+            for (int i = 0; i < 8; i++)
             {
-                n &= (n - 1);
-                count++;
+                if (((n >> i) & 0x01) == 1)
+                    count++;
             }
             return count;
         }
@@ -473,7 +467,7 @@ namespace Game_Of_Life
                     for (int x = 0; x < CurrentBitMap.Width; x++)
                     {
                         //Вызываем метод для отображения текущего состояния клетки на картинке
-                        SetBit(linePtr, x, CurrentState[y,x]);
+                        SetBit(linePtr, x, CurrentState[y, x]);
                     }
                 }
                 CurrentBitMap.UnlockBits(data);
@@ -513,10 +507,10 @@ namespace Game_Of_Life
         private void button1_Click(object sender, EventArgs e)
         {
             //запускаем симуляцию, делаем недоступными кнопки "пуск" и "пошаговое выполнения" и ползунок, разблокируем кнопку "пауза"
-            button2.Enabled = true;
-            button1.Enabled = false;
-            button3.Enabled = false;
-            trackBar1.Enabled = false;
+            PauseButton.Enabled = true;
+            RunButton.Enabled = false;
+            RunOneStepButton.Enabled = false;
+            FillingPercentileTracker.Enabled = false;
             //снимаем флаг паузы
             suspended = false;
         }
@@ -528,10 +522,10 @@ namespace Game_Of_Life
         private void button2_Click(object sender, EventArgs e)
         {
             //останавливаем симуляцию, делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
-            button2.Enabled = false;
-            button1.Enabled = true;
-            button3.Enabled = true;
-            trackBar1.Enabled = true;
+            PauseButton.Enabled = false;
+            RunButton.Enabled = true;
+            RunOneStepButton.Enabled = true;
+            FillingPercentileTracker.Enabled = true;
             //устанавливаем флаг паузы
             suspended = true;
         }
@@ -545,7 +539,7 @@ namespace Game_Of_Life
             chart.Series[0].Points.Clear();
             chart.Series[1].Points.Clear();
             chart.Series[2].Points.Clear();
-            InitialDensityPercent = trackBar1.Value;
+            InitialDensityPercent = FillingPercentileTracker.Value;
             seedpercent.Text = InitialDensityPercent.ToString();
             CurrentState = new bool[FieldHeight, FieldWidth];
             NextState = new bool[FieldHeight, FieldWidth];
@@ -558,8 +552,8 @@ namespace Game_Of_Life
             DrawBitmap();
             if (!seedcomplete)
             {
-                button1.Enabled = true;
-                button3.Enabled = true;
+                RunButton.Enabled = true;
+                RunOneStepButton.Enabled = true;
                 seedcomplete = true;
             }
         }
@@ -571,10 +565,10 @@ namespace Game_Of_Life
         private void button3_Click_1(object sender, EventArgs e)
         {
             //запускаем симуляцию, делаем недоступными кнопки "пуск" и "пошаговое выполнения" и ползунок, разблокируем кнопку "пауза"
-            button2.Enabled = true;
-            button1.Enabled = false;
-            button3.Enabled = false;
-            trackBar1.Enabled = false;
+            PauseButton.Enabled = true;
+            RunButton.Enabled = false;
+            RunOneStepButton.Enabled = false;
+            FillingPercentileTracker.Enabled = false;
             //устанавливаем признак одного шага
             OneStep = true;
             //снимаем флаг паузы

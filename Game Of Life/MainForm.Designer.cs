@@ -1,6 +1,6 @@
 ﻿namespace Game_Of_Life
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Обязательная переменная конструктора.
@@ -28,11 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.button1 = new System.Windows.Forms.Button();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            this.RunButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.movelabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -41,12 +41,12 @@
             this.deadlabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.alivelabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.PauseButton = new System.Windows.Forms.Button();
+            this.RunOneStepButton = new System.Windows.Forms.Button();
             this.chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.seedpercent = new System.Windows.Forms.Label();
-            this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.FillingPercentileTracker = new System.Windows.Forms.TrackBar();
             this.cpcb = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -58,16 +58,16 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.ttl = new System.Windows.Forms.NumericUpDown();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.nmin = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.nmax = new System.Windows.Forms.NumericUpDown();
             this.label5 = new System.Windows.Forms.Label();
             this.newborn = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.nmax = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
+            this.nmin = new System.Windows.Forms.NumericUpDown();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FillingPercentileTracker)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pic)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -75,22 +75,22 @@
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ttl)).BeginInit();
             this.groupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nmin)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nmax)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newborn)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmax)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmin)).BeginInit();
             this.SuspendLayout();
             // 
-            // button1
+            // RunButton
             // 
-            this.button1.Enabled = false;
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(700, 230);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(135, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Run Life";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.RunButton.Enabled = false;
+            this.RunButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.RunButton.Location = new System.Drawing.Point(700, 230);
+            this.RunButton.Name = "RunButton";
+            this.RunButton.Size = new System.Drawing.Size(135, 23);
+            this.RunButton.TabIndex = 1;
+            this.RunButton.Text = "Run Life";
+            this.RunButton.UseVisualStyleBackColor = true;
+            this.RunButton.Click += new System.EventHandler(this.button1_Click);
             // 
             // statusStrip1
             // 
@@ -151,61 +151,61 @@
             this.alivelabel.Name = "alivelabel";
             this.alivelabel.Size = new System.Drawing.Size(0, 17);
             // 
-            // button2
+            // PauseButton
             // 
-            this.button2.Enabled = false;
-            this.button2.Location = new System.Drawing.Point(922, 230);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 4;
-            this.button2.Text = "Pause";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.PauseButton.Enabled = false;
+            this.PauseButton.Location = new System.Drawing.Point(922, 230);
+            this.PauseButton.Name = "PauseButton";
+            this.PauseButton.Size = new System.Drawing.Size(75, 23);
+            this.PauseButton.TabIndex = 4;
+            this.PauseButton.Text = "Pause";
+            this.PauseButton.UseVisualStyleBackColor = true;
+            this.PauseButton.Click += new System.EventHandler(this.button2_Click);
             // 
-            // button3
+            // RunOneStepButton
             // 
-            this.button3.Enabled = false;
-            this.button3.Location = new System.Drawing.Point(841, 230);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 7;
-            this.button3.Text = "Move >|";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click_1);
+            this.RunOneStepButton.Enabled = false;
+            this.RunOneStepButton.Location = new System.Drawing.Point(841, 230);
+            this.RunOneStepButton.Name = "RunOneStepButton";
+            this.RunOneStepButton.Size = new System.Drawing.Size(75, 23);
+            this.RunOneStepButton.TabIndex = 7;
+            this.RunOneStepButton.Text = "Move >|";
+            this.RunOneStepButton.UseVisualStyleBackColor = true;
+            this.RunOneStepButton.Click += new System.EventHandler(this.button3_Click_1);
             // 
             // chart
             // 
-            chartArea1.Area3DStyle.Enable3D = true;
-            chartArea1.Area3DStyle.WallWidth = 1;
-            chartArea1.Name = "ChartArea1";
-            this.chart.ChartAreas.Add(chartArea1);
+            chartArea2.Area3DStyle.Enable3D = true;
+            chartArea2.Area3DStyle.WallWidth = 1;
+            chartArea2.Name = "ChartArea1";
+            this.chart.ChartAreas.Add(chartArea2);
             this.chart.Location = new System.Drawing.Point(0, 25);
             this.chart.Name = "chart";
-            series1.BorderWidth = 2;
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Color = System.Drawing.Color.LimeGreen;
-            series1.Name = "Alive";
-            series2.BorderWidth = 2;
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Color = System.Drawing.Color.Blue;
-            series2.Name = "Born";
-            series3.BorderWidth = 2;
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series3.Color = System.Drawing.Color.Red;
-            series3.Name = "Dead";
-            this.chart.Series.Add(series1);
-            this.chart.Series.Add(series2);
-            this.chart.Series.Add(series3);
+            series4.BorderWidth = 2;
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series4.Color = System.Drawing.Color.LimeGreen;
+            series4.Name = "Alive";
+            series5.BorderWidth = 2;
+            series5.ChartArea = "ChartArea1";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series5.Color = System.Drawing.Color.Blue;
+            series5.Name = "Born";
+            series6.BorderWidth = 2;
+            series6.ChartArea = "ChartArea1";
+            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series6.Color = System.Drawing.Color.Red;
+            series6.Name = "Dead";
+            this.chart.Series.Add(series4);
+            this.chart.Series.Add(series5);
+            this.chart.Series.Add(series6);
             this.chart.Size = new System.Drawing.Size(1009, 148);
             this.chart.TabIndex = 10;
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.seedpercent);
-            this.groupBox1.Controls.Add(this.trackBar1);
+            this.groupBox1.Controls.Add(this.FillingPercentileTracker);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.Location = new System.Drawing.Point(0, 183);
             this.groupBox1.Name = "groupBox1";
@@ -224,14 +224,14 @@
             this.seedpercent.TabIndex = 10;
             this.seedpercent.Text = "0";
             // 
-            // trackBar1
+            // FillingPercentileTracker
             // 
-            this.trackBar1.Location = new System.Drawing.Point(6, 19);
-            this.trackBar1.Maximum = 100;
-            this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(150, 45);
-            this.trackBar1.TabIndex = 7;
-            this.trackBar1.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
+            this.FillingPercentileTracker.Location = new System.Drawing.Point(6, 19);
+            this.FillingPercentileTracker.Maximum = 100;
+            this.FillingPercentileTracker.Name = "FillingPercentileTracker";
+            this.FillingPercentileTracker.Size = new System.Drawing.Size(150, 45);
+            this.FillingPercentileTracker.TabIndex = 7;
+            this.FillingPercentileTracker.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
             // 
             // cpcb
             // 
@@ -362,38 +362,38 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Neighbors";
             // 
-            // nmin
+            // label5
             // 
-            this.nmin.Location = new System.Drawing.Point(39, 24);
-            this.nmin.Maximum = new decimal(new int[] {
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(176, 28);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(62, 13);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "Born New";
+            // 
+            // newborn
+            // 
+            this.newborn.Location = new System.Drawing.Point(240, 24);
+            this.newborn.Maximum = new decimal(new int[] {
             8,
             0,
             0,
             0});
-            this.nmin.Minimum = new decimal(new int[] {
+            this.newborn.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.nmin.Name = "nmin";
-            this.nmin.ReadOnly = true;
-            this.nmin.Size = new System.Drawing.Size(42, 20);
-            this.nmin.TabIndex = 0;
-            this.nmin.Value = new decimal(new int[] {
-            2,
+            this.newborn.Name = "newborn";
+            this.newborn.ReadOnly = true;
+            this.newborn.Size = new System.Drawing.Size(42, 20);
+            this.newborn.TabIndex = 4;
+            this.newborn.Value = new decimal(new int[] {
+            3,
             0,
             0,
             0});
-            this.nmin.ValueChanged += new System.EventHandler(this.nmin_ValueChanged);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 28);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(27, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Min";
+            this.newborn.ValueChanged += new System.EventHandler(this.numericUpDown3_ValueChanged);
             // 
             // label4
             // 
@@ -428,40 +428,40 @@
             0});
             this.nmax.ValueChanged += new System.EventHandler(this.nmax_ValueChanged);
             // 
-            // label5
+            // label3
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(176, 28);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(62, 13);
-            this.label5.TabIndex = 5;
-            this.label5.Text = "Born New";
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 28);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(27, 13);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Min";
             // 
-            // newborn
+            // nmin
             // 
-            this.newborn.Location = new System.Drawing.Point(240, 24);
-            this.newborn.Maximum = new decimal(new int[] {
+            this.nmin.Location = new System.Drawing.Point(39, 24);
+            this.nmin.Maximum = new decimal(new int[] {
             8,
             0,
             0,
             0});
-            this.newborn.Minimum = new decimal(new int[] {
+            this.nmin.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.newborn.Name = "newborn";
-            this.newborn.ReadOnly = true;
-            this.newborn.Size = new System.Drawing.Size(42, 20);
-            this.newborn.TabIndex = 4;
-            this.newborn.Value = new decimal(new int[] {
-            3,
+            this.nmin.Name = "nmin";
+            this.nmin.ReadOnly = true;
+            this.nmin.Size = new System.Drawing.Size(42, 20);
+            this.nmin.TabIndex = 0;
+            this.nmin.Value = new decimal(new int[] {
+            2,
             0,
             0,
             0});
-            this.newborn.ValueChanged += new System.EventHandler(this.numericUpDown3_ValueChanged);
+            this.nmin.ValueChanged += new System.EventHandler(this.nmin_ValueChanged);
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(1009, 824);
@@ -475,13 +475,13 @@
             this.Controls.Add(this.cpcb);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.chart);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.RunOneStepButton);
+            this.Controls.Add(this.PauseButton);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.RunButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Game Of Life";
             this.statusStrip1.ResumeLayout(false);
@@ -489,7 +489,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FillingPercentileTracker)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pic)).EndInit();
             this.groupBox2.ResumeLayout(false);
@@ -498,16 +498,16 @@
             ((System.ComponentModel.ISupportInitialize)(this.ttl)).EndInit();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nmin)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nmax)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.newborn)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmax)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmin)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button RunButton;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel bornlabel;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
@@ -516,12 +516,12 @@
         private System.Windows.Forms.ToolStripStatusLabel alivelabel;
         private System.Windows.Forms.ToolStripStatusLabel movelabel;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button PauseButton;
+        private System.Windows.Forms.Button RunOneStepButton;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label seedpercent;
-        private System.Windows.Forms.TrackBar trackBar1;
+        private System.Windows.Forms.TrackBar FillingPercentileTracker;
         private System.Windows.Forms.ComboBox cpcb;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
