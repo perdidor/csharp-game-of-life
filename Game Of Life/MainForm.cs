@@ -1,21 +1,30 @@
-﻿//Правила
-//Место действия этой игры — «вселенная» — это размеченная на клетки поверхность или плоскость — безграничная, ограниченная, или замкнутая(в пределе — бесконечная плоскость).
-//Каждая клетка на этой поверхности может находиться в двух состояниях: быть «живой» (заполненной) или быть «мёртвой» (пустой). Клетка имеет восемь соседей, окружающих её.
-//Распределение живых клеток в начале игры называется первым поколением.Каждое следующее поколение рассчитывается на основе предыдущего по таким правилам: 
-//в пустой(мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
-//если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, если соседей меньше двух или больше трёх, клетка умирает(«от одиночества» 
-//или «от перенаселённости»)
-//также в игру введены дополнительные условия выживания клетки: максимальное время жизни и риск внезпаной смерти
-//Игра прекращается, если:
-//на поле не останется ни одной «живой» клетки - РЕАЛИЗОВАНО
-//конфигурация на очередном шаге в точности(без сдвигов и поворотов) повторит себя же на одном из более ранних шагов(складывается периодическая конфигурация) - НЕ РЕАЛИЗОВАНО
-//при очередном шаге ни одна из клеток не меняет своего состояния(складывается стабильная конфигурация; предыдущее правило, вырожденное до одного шага назад) - РЕАЛИЗОВАНО
-//Эти простые правила приводят к огромному разнообразию форм, которые могут возникнуть в игре.
-//Игрок не принимает прямого участия в игре, а лишь расставляет или генерирует начальную конфигурацию «живых» клеток, которые затем взаимодействуют согласно правилам уже без его 
-//участия (он является наблюдателем).
+﻿// Правила
+// Место действия этой игры — «вселенная» — это размеченная на клетки поверхность или плоскость — безграничная, ограниченная,
+// или замкнутая(в пределе — бесконечная плоскость).
+// Каждая клетка на этой поверхности может находиться в двух состояниях: быть «живой» (заполненной) или быть «мёртвой» (пустой).
+// Клетка может иметь до 8 соседей, окружающих её.
+// Распределение живых клеток в начале игры называется первым поколением.Каждое следующее поколение рассчитывается на основе
+// предыдущего по таким правилам: 
+// 1. в пустой(мёртвой) клетке, рядом с которой ровно три живые клетки (количество настраивается), зарождается жизнь;
+// 2. если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, если соседей меньше
+// двух или больше трёх, клетка умирает(«от одиночества» или «от перенаселённости» (количество настраивается);
+// также в игру введены дополнительные условия выживания клетки: максимальное время жизни и риск внезпаной смерти
+// Игра прекращается, если:
+// 1. на поле не останется ни одной «живой» клетки - РЕАЛИЗОВАНО
+// 2. Конфигурация на очередном шаге в точности(без сдвигов и поворотов) повторит себя же на одном из более ранних шагов(складывается
+// периодическая конфигурация) - НЕ РЕАЛИЗОВАНО
+// 3. При очередном шаге ни одна из клеток не меняет своего состояния(складывается стабильная конфигурация; предыдущее правило,
+// вырожденное до одного шага назад) - РЕАЛИЗОВАНО
+// Эти простые правила приводят к огромному разнообразию форм, которые могут возникнуть в игре.
+// Игрок не принимает прямого участия в игре, а лишь расставляет или генерирует начальную конфигурацию «живых» клеток, которые затем
+// взаимодействуют согласно правилам уже без его 
+// участия (он является наблюдателем).
+// ======================================================================================================================================
+// !!! не тупите и не сдавайте как свою работу, алгоритм простой, перепишите самостоятельно, изменив по меньшей мере названия методов !!!
+// !!! и переменных, уберите комментарии, залезьте в свойства проекта и поменяйте свойства сборки, не будьте тупее чем на самом деле. !!!
+// ======================================================================================================================================
 
 using System;
-using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -156,7 +165,7 @@ namespace Game_Of_Life
         public MainForm()
         {
             InitializeComponent();
-            //инициализируем переменные
+            // инициализируем переменные
             Instance = this;
             MaxTTL = (int)ttl.Value;
             SuddenDeathPercent = (int)sdprob.Value;
@@ -170,16 +179,17 @@ namespace Game_Of_Life
             ShowBitMap();
             Refresh();
             ChartPoints = Convert.ToInt16(cpcb.Items[0].ToString());
-            //подключаем обработчик события изменения положения ползунка (если подключить раньше или в свойствах контрола, будет ошибка на две строки ранее при изменении индекса)
+            // подключаем обработчик события изменения положения ползунка (если подключить раньше или в свойствах контрола, будет 
+            // ошибка на две строки ранее при изменении индекса)
             cpcb.SelectedIndexChanged += cpcb_SelectedIndexChanged;
-            //Выбираем максимальное значение, доступное в выпаджающем списке (должен быть отсортирован по возрастанию)
+            // Выбираем максимальное значение, доступное в выпаджающем списке (должен быть отсортирован по возрастанию)
             MaxChartPoints = Convert.ToInt32(cpcb.Items[cpcb.Items.Count - 1].ToString());
 
-            //запускаем асинхронную задачу пошаговой трансформации поля в фоновом потоке
+            // запускаем асинхронную задачу пошаговой трансформации поля в фоновом потоке
             Task.Run(() => {
                 while (true)
                 {
-                    //если флаг паузы выставлен в true, ждем и проверяем через каждые 100мс
+                    // если флаг паузы выставлен в true, ждем и проверяем через каждые 100мс
                     while (suspended)
                     {
                         Task.Delay(100);
@@ -191,20 +201,22 @@ namespace Game_Of_Life
                     }
                     catch (Exception ex)
                     {
-                        Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+                        Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается
+                        // весь интерфейс
                         {
-                            MessageBox.Show(Instance, string.Format("Ошибка на шаге {0}: {1}{2}{3}", movenumber, ex.Message, Environment.NewLine, ex.InnerException?.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(Instance, string.Format("Ошибка на шаге {0}: {1}{2}{3}", movenumber, ex.Message, 
+                                Environment.NewLine, ex.InnerException?.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         });
                     }
                     movenumber++;
-                    //проверяем признак пошагового выполнения
+                    // проверяем признак пошагового выполнения
                     if (OneStep)
                     {
-                        //снимаем флаг пошагового выполнения
+                        // снимаем флаг пошагового выполнения
                         OneStep = false;
                         //Устанавливаем флаг паузы
                         suspended = true;
-                        //делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
+                        // делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
                         PauseButton.Enabled = false;
                         RunButton.Enabled = true;
                         RunOneStepButton.Enabled = true;
@@ -297,12 +309,12 @@ namespace Game_Of_Life
             NextState = new bool[FieldHeight, FieldWidth];
             int divider = (int)(FieldHeight / 2);
             CTS = new CancellationTokenSource();
-            //обсчитывать трансформацию будем в два параллельных потока
-            //создаем массив асинхронных задач, делим поле пополам
+            // обсчитывать трансформацию будем в два параллельных потока
+            // создаем массив асинхронных задач, делим поле пополам
             var task1 = Task.Run(() => ProcessTransform(0, divider), CTS.Token);
             var task2 = Task.Run(() => ProcessTransform(divider, FieldHeight), CTS.Token);
-            Task.WhenAll(task1, task2).Wait();//дожидаемся конца выполнения всех потоков
-            Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+            Task.WhenAll(task1, task2).Wait();// ожидаемся конца выполнения всех потоков
+            Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
             {
                 if (alive > MaxAlive) MaxAlive = alive;
                 if (alive < MinAlive) MinAlive = alive;
@@ -314,7 +326,8 @@ namespace Game_Of_Life
                 bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", born, MaxBorn, MinBorn);
                 deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", dead, MaxDead, MinDead);
                 alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", alive, MaxAlive, MinAlive);
-                //если превышено максимальное количество отображаемых точек графика, удаляем "лишние" точки из начала коллекции, оставляем последние в количестве = MaxChartPoints
+                // если превышено максимальное количество отображаемых точек графика, удаляем "лишние" точки из начала коллекции,
+                // оставляем последние в количестве = MaxChartPoints
                 if (chart.Series[0].Points.Count > MaxChartPoints)
                 {
                     for (int i = 0; i < chart.Series[0].Points.Count - MaxChartPoints; i++)
@@ -324,30 +337,35 @@ namespace Game_Of_Life
                         chart.Series[2].Points.RemoveAt(0);
                     }
                 }
-                //Устанавливаем максимальное и минимальное значение по оси X, в зависимости от того, сколько точек выбрано для отображения и номера текущего шага
+                // Устанавливаем максимальное и минимальное значение по оси X, в зависимости от того, сколько точек выбрано для отображения
+                // и номера текущего шага
                 chart.ChartAreas[0].AxisX.Minimum = (movenumber <= ChartPoints) ? 0 : (movenumber - ChartPoints);
                 chart.ChartAreas[0].AxisX.Maximum = (movenumber <= ChartPoints) ? ChartPoints : (chart.ChartAreas[0].AxisX.Minimum + ChartPoints);
-                //Меняем масштаб графика по оси Y, в зависимости от максимального отображаемого значения
-                chart.ChartAreas[0].AxisY.Minimum = (movenumber <= ChartPoints) ? Math.Floor(Math.Min(MinAlive, Math.Min(MinDead, MinBorn)) * 0.5) : Math.Floor(Math.Min(chart.Series[1].Points.Reverse().Take(ChartPoints).Reverse().Min(a => a.YValues[0]), chart.Series[2].Points.Reverse().Take(ChartPoints).Reverse().Min(b => b.YValues[0])) * 0.5);
-                chart.ChartAreas[0].AxisY.Maximum = (movenumber <= ChartPoints) ? Math.Floor(Math.Max(MaxAlive, Math.Max(MaxDead, MaxBorn)) * 1.1) : Math.Floor(chart.Series[0].Points.Reverse().Take(ChartPoints).Reverse().Max(a => a.YValues[0]) * 1.1);
-                //Добавляем точки на графики количества живых, умерших и родившихся клеток на текущем шаге
+                // Меняем масштаб графика по оси Y, в зависимости от максимального отображаемого значения
+                chart.ChartAreas[0].AxisY.Minimum = (movenumber <= ChartPoints) ? Math.Floor(Math.Min(MinAlive, Math.Min(MinDead, MinBorn)) * 0.5)
+                : Math.Floor(Math.Min(chart.Series[1].Points.Reverse().Take(ChartPoints).Reverse().Min(a => a.YValues[0]), chart.Series[2].Points.Reverse()
+                .Take(ChartPoints).Reverse().Min(b => b.YValues[0])) * 0.5);
+                chart.ChartAreas[0].AxisY.Maximum = (movenumber <= ChartPoints) ? Math.Floor(Math.Max(MaxAlive, Math.Max(MaxDead, MaxBorn)) * 1.1)
+                : Math.Floor(chart.Series[0].Points.Reverse().Take(ChartPoints).Reverse().Max(a => a.YValues[0]) * 1.1);
+                // Добавляем точки на графики количества живых, умерших и родившихся клеток на текущем шаге
                 chart.Series[0].Points.AddXY(movenumber, alive);
                 chart.Series[1].Points.AddXY(movenumber, born);
                 chart.Series[2].Points.AddXY(movenumber, dead);
             });
             if (Changed)
             {
-                //Есть изменения, копируем состояние следующего шага в текущий массив
+                // Есть изменения, копируем состояние следующего шага в текущий массив
                 Array.Copy(NextState, CurrentState, NextState.Length);
             }
             else
             {
-                //Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
-                Instance.Invoke((MethodInvoker)delegate//делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+                // Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
+                Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
                 {
                     CTS.Cancel();
-                    button2_Click(null, null);//нажимаем кнопку "Пауза"
-                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    button2_Click(null, null);// нажимаем кнопку "Пауза"
+                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 });
             }
         }
@@ -361,16 +379,18 @@ namespace Game_Of_Life
                 {
                     for (int x = 0; x < FieldWidth; x++)
                     {
-                        int ncount = GetNeighborsMask(y, x);//получаем количество соседей из байта состояния
-                        bool state = CurrentState[y, x];//текущее состояние клетки: true = жива
+                        int ncount = GetNeighborsMask(y, x);// получаем количество соседей из байта состояния
+                        bool state = CurrentState[y, x];// текущее состояние клетки: true = жива
                         switch (state)
                         {
                             case true:// клетка жива на текущем шаге
                                 LifeTime[y, x]++;
                                 alive++;
-                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (0.5 + LifeTime[y, x] / (2 * MaxTTL)) : 1) * 1.00 : 0;
+                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (0.5 + LifeTime[y, x] 
+                                / (2 * MaxTTL)) : 1) * 1.00 : 0;
                                 // риск внезапной смерти растет с возрастом клетки, от половины заданного
-                                // значения в начале жизни до 100% в конце (если задан максимальный срок). Если не задан, риск внезапной смерти постоянный на протяжении всей жизни клетки
+                                // значения в начале жизни до 100% в конце (если задан максимальный срок). Если не задан, риск внезапной смерти
+                                // постоянный на протяжении всей жизни клетки
 
                                 // проверяем смертельные факторы, если хоть один сработал - клетке пиздец
                                 // TODO: назначить старым клеткам пенсию и поиграть с ее выдачей и пенсионным возрастом
@@ -455,7 +475,9 @@ namespace Game_Of_Life
                     for (int x = 0; x < CurrentBitMap.Width; x++)
                     {
 
-                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? (LifeTime[y, x] == 0 ? Color.FromArgb(255, 0, 0, 255) : Color.FromArgb(255, 0, 255, 0)) : (LifeTime[y, x] == 0 ? Color.FromArgb(255, 255, 0, 0) : Color.FromArgb(255, 0, 0, 0)));
+                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? (LifeTime[y, x] == 0 ? Color.FromArgb(255, 0, 0, 255)
+                            : Color.FromArgb(255, 0, 255, 0)) : (LifeTime[y, x] == 0 ? Color.FromArgb(255, 255, 0, 0)
+                            : Color.FromArgb(255, 0, 0, 0)));
                     }
                 }
                 ShowBitMap();
@@ -550,7 +572,8 @@ namespace Game_Of_Life
             Instance.Invoke((MethodInvoker)delegate
             {
                 chart.ChartAreas[0].AxisX.Minimum = (movenumber <= ChartPoints) ? 0 : (movenumber - chart.Series[0].Points.Count);
-                chart.ChartAreas[0].AxisX.Maximum = (movenumber <= ChartPoints) ? ChartPoints : (chart.ChartAreas[0].AxisX.Minimum + ChartPoints);
+                chart.ChartAreas[0].AxisX.Maximum = (movenumber <= ChartPoints) ? ChartPoints : (chart.ChartAreas[0].AxisX.Minimum
+                + ChartPoints);
             });
         }
         /// <summary>
