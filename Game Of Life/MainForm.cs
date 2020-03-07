@@ -145,6 +145,9 @@ namespace Game_Of_Life
         /// </summary>
         int zoomFactor = 1;
 
+        /// <summary>
+        /// Источник сигнала об окончании работы для асинхронных задач обработки трансформации игрового поля
+        /// </summary>
         private static CancellationTokenSource CTS;
 
         /// <summary>
@@ -274,6 +277,7 @@ namespace Game_Of_Life
                         MaxAlive++;
                         MinAlive++;
                     }
+                    LifeTime[y, x] = -1;
                 }
             }
             MaxBorn = 0;
@@ -400,6 +404,7 @@ namespace Game_Of_Life
                                 {
                                     // клетка остается мертвой
                                     NextState[y, x] = false;
+                                    LifeTime[y, x] = -1;
                                 }
                                 break;
                         }
@@ -451,7 +456,6 @@ namespace Game_Of_Life
                     {
 
                         CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? (LifeTime[y, x] == 0 ? Color.FromArgb(255, 0, 0, 255) : Color.FromArgb(255, 0, 255, 0)) : (LifeTime[y, x] == 0 ? Color.FromArgb(255, 255, 0, 0) : Color.FromArgb(255, 0, 0, 0)));
-                        if (!CurrentState[y, x] && LifeTime[y, x] == 0) LifeTime[y, x] = -1;
                     }
                 }
                 ShowBitMap();
