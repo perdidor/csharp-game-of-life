@@ -364,14 +364,14 @@ namespace Game_Of_Life
                             case true:// клетка жива на текущем шаге
                                 LifeTime[y, x]++;
                                 alive++;
-                                var CurrentSuddenDeathRisk = SuddenDeathPercent * (LifeTime[y, x] / MaxTTL) * 1.00;// риск внезапной смерти растет с возрастом клетки
+                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (LifeTime[y, x] / MaxTTL) : 1) * 1.00 : 0;// риск внезапной смерти растет с возрастом клетки
 
                                 // проверяем смертельные факторы, если хоть один сработал - клетке пиздец
                                 // TODO: назначить старым клеткам пенсию и поиграть с ее выдачей и пенсионным возрастом
                                 if (ncount > MaxNeighbors// перенаселённость
                                 || ncount < MinNeighbors// одиночество
-                                || (LifeTime[y, x] >= MaxTTL)// старость
-                                || (sdrnd.NextDouble() * 100 <= SuddenDeathPercent))// Внезапная (случайная) смерть
+                                || (LifeTime[y, x] == MaxTTL)// старость
+                                || (sdrnd.NextDouble() * 100 <= CurrentSuddenDeathRisk))// Внезапная (случайная) смерть
                                 {
                                     // клетка умирает
                                     dead++;
