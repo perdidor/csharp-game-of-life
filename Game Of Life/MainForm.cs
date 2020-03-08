@@ -160,8 +160,14 @@ namespace Game_Of_Life
         /// </summary>
         private static CancellationTokenSource CTS;
 
-        // для рисования
+        /// <summary>
+        /// Объект для запоминания последней отрисованной точки при рисовании мышкой
+        /// </summary>
         Point lastPoint = Point.Empty;
+
+        /// <summary>
+        /// Переменная которая хранит признак нажатой кнопки мыши (для рисования)
+        /// </summary>
         bool isMouseDown = new Boolean();
 
         /// <summary>
@@ -217,18 +223,12 @@ namespace Game_Of_Life
                     {
                         // снимаем флаг пошагового выполнения
                         OneStep = false;
-                        //Устанавливаем флаг паузы
-                        suspended = true;
-                        // делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
-                        PauseButton.Enabled = false;
-                        RunButton.Enabled = true;
-                        RunOneStepButton.Enabled = true;
-                        ResetButton.Enabled = true;
-                        FillingPercentileTracker.Enabled = true;
+                        Suspend();
                     }
                 }
             });
         }
+
         /// <summary>
         /// зум картинки меняется в пределах х1..х4 прокручиванием колесика мыши, на 4 Гб ОЗУ больше 4 ставить не надо памяти не хватит.
         /// </summary>
@@ -238,26 +238,27 @@ namespace Game_Of_Life
         {
             Instance.Invoke((MethodInvoker)delegate
             {
+                bool show = false;
                 if (e.Delta > 3)
                 {
                     if (zoomFactor < 5) zoomFactor++;
-                    if (seedcomplete && suspended)
+                    if (suspended)
                     {
-                        ShowBitMap();
-                        Refresh();
+                        show = true;
                     }
                 }
                 if (e.Delta < -3)
                 {
                     if (zoomFactor > 1) zoomFactor--;
-                    if (seedcomplete && suspended)
+                    if (suspended)
                     {
-                        ShowBitMap();
-                        Refresh();
+                        show = true;
                     }
                 }
+                if (show) ShowBitMap();
             });
         }
+
         /// <summary>
         /// Выводим картинку с текущей степенью увеличения
         /// </summary>
@@ -272,10 +273,11 @@ namespace Game_Of_Life
             panel1.VerticalScroll.Visible = (pic.Height > panel1.Height);
             panel1.HorizontalScroll.Visible = (pic.Width > panel1.Width);
             zoomlabel.Text = string.Format("x{0}", zoomFactor);
+            Refresh();
         }
 
         /// <summary>
-        /// Заполнение поля случайным способом
+        /// Заполнение поля (задание начальных условий)
         /// </summary>
         private void InitialSeed()
         {
@@ -286,9 +288,9 @@ namespace Game_Of_Life
                 CurrentState = new bool[FieldHeight, FieldWidth];
             if (InitialDensityPercent > 0)
             {
+                Random rnd = new Random(Guid.NewGuid().GetHashCode());
                 for (int y = 0; y < FieldHeight; y++)
                 {
-                    Random rnd = new Random(Guid.NewGuid().GetHashCode());
                     for (int x = 0; x < FieldWidth; x++)
                     {
                         CurrentState[y, x] = (rnd.Next(100) <= InitialDensityPercent);
@@ -302,7 +304,7 @@ namespace Game_Of_Life
                     }
                 }
             } else
-            {
+            {// если процент случайного заполнения = 0, рисуем черный квадрат
                 CurrentState = new bool[FieldHeight, FieldWidth];
                 for (int y = 0; y < FieldHeight; y++)
                 {
@@ -318,10 +320,7 @@ namespace Game_Of_Life
             MaxDead = 0;
             MinDead = 999999999;
             movenumber = 0;
-            movelabel.Text = string.Format("Move# {0}", movenumber);
-            bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", 0, MaxBorn, MinBorn);
-            deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", 0, MaxDead, MinDead);
-            alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", 0, MaxAlive, MinAlive);
+            ShowCurrentStepInfo();
             DrawBitmap();
             if (InitialDensityPercent == 0)
             {
@@ -341,6 +340,18 @@ namespace Game_Of_Life
                 }
             }
         }
+
+        /// <summary>
+        /// Выводим показания счетчиков и номер шага на форму
+        /// </summary>
+        private void ShowCurrentStepInfo()
+        {
+            movelabel.Text = string.Format("Move# {0}", movenumber);
+            bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", 0, MaxBorn, MinBorn);
+            deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", 0, MaxDead, MinDead);
+            alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", 0, MaxAlive, MinAlive);
+        }
+
         /// <summary>
         /// Трансформация текущего состояния по правилам
         /// </summary>
@@ -351,25 +362,27 @@ namespace Game_Of_Life
             alive = 0;
             Changed = false;
             NextState = new bool[FieldHeight, FieldWidth];
-            int divider = (int)(FieldHeight / 2);
-            CTS = new CancellationTokenSource();
+
             // обсчитывать трансформацию будем в два параллельных потока
             // создаем массив асинхронных задач, делим поле пополам
+            int divider = (int)(FieldHeight / 2);
+            CTS = new CancellationTokenSource();
             var task1 = Task.Run(() => ProcessTransform(0, divider), CTS.Token);
             var task2 = Task.Run(() => ProcessTransform(divider, FieldHeight), CTS.Token);
             Task.WhenAll(task1, task2).Wait();// ожидаемся конца выполнения всех потоков
+
             Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
             {
+                // обновляем максимальные и минимальные значения
                 if (alive > MaxAlive) MaxAlive = alive;
                 if (alive < MinAlive) MinAlive = alive;
                 if (born > MaxBorn) MaxBorn = born;
                 if (born < MinBorn) MinBorn = born;
                 if (dead > MaxDead) MaxDead = dead;
                 if (dead < MinDead) MinDead = dead;
-                movelabel.Text = string.Format("Move# {0}", movenumber);
-                bornlabel.Text = string.Format("Born: {0} (Max: {1}/Min: {2})", born, MaxBorn, MinBorn);
-                deadlabel.Text = string.Format("Dead: {0} (Max: {1}/Min: {2})", dead, MaxDead, MinDead);
-                alivelabel.Text = string.Format("Alive: {0} (Max: {1}/Min: {2})", alive, MaxAlive, MinAlive);
+
+                ShowCurrentStepInfo();
+
                 // если превышено максимальное количество отображаемых точек графика, удаляем "лишние" точки из начала коллекции,
                 // оставляем последние в количестве = MaxChartPoints
                 if (chart.Series[0].Points.Count > MaxChartPoints)
@@ -406,7 +419,7 @@ namespace Game_Of_Life
                 // Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
                 Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
                 {
-                    CTS.Cancel();
+                    CTS.Cancel();// подаем сигнал СТОП асинхронным задачам
                     button2_Click(null, null);// нажимаем кнопку "Пауза"
                     MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information", 
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -414,11 +427,17 @@ namespace Game_Of_Life
             }
         }
 
+        /// <summary>
+        /// Задача для обсчета трансформации игрового поля для следующего шага в фоновом потоке
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <returns></returns>
         private async Task<bool> ProcessTransform(int from, int to)
         {
             await Task.Run(() =>
             {
-                Random sdrnd = new Random(Guid.NewGuid().GetHashCode());
+                Random sdrnd = new Random(Guid.NewGuid().GetHashCode());// Инициализируем генератор случайных чисел
                 for (int y = from; y < to; y++)
                 {
                     for (int x = 0; x < FieldWidth; x++)
@@ -430,11 +449,12 @@ namespace Game_Of_Life
                             case true:// клетка жива на текущем шаге
                                 LifeTime[y, x]++;
                                 alive++;
-                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (0.5 + LifeTime[y, x] 
-                                / (2 * MaxTTL)) : 1) * 1.00 : 0;
+
                                 // риск внезапной смерти растет с возрастом клетки, от половины заданного
-                                // значения в начале жизни до 100% в конце (если задан максимальный срок). Если не задан, риск внезапной смерти
-                                // постоянный на протяжении всей жизни клетки
+                                // значения в начале жизни до 100% его значения в конце (если задан максимальный срок). Если не задан, риск внезапной
+                                // смерти постоянный на протяжении всей жизни клетки и равен заданному значению SuddenDeathPercent
+                                var CurrentSuddenDeathRisk = SuddenDeathPercent > 0 ? SuddenDeathPercent * (MaxTTL > 0 ? (0.5 + LifeTime[y, x]
+                                / (2 * MaxTTL)) : 1) * 1.00 : 0;
 
                                 // проверяем смертельные факторы, если хоть один сработал - клетке пиздец
                                 // TODO: назначить старым клеткам пенсию и поиграть с ее выдачей и пенсионным возрастом
@@ -455,6 +475,7 @@ namespace Game_Of_Life
                                     NextState[y, x] = true;
                                 }
                                 break;
+
                             case false:// клетка мертва на текущем шаге
                                 if (!state && ncount == NeighborsBornNew)
                                 {
@@ -495,19 +516,19 @@ namespace Game_Of_Life
             var Ydec = (FieldHeight + y - 1) % FieldHeight;//декрементированное значение координаты Y
             var Xinc = (x + 1) % FieldWidth;//инкрементированное значение координаты X
             var Xdec = (FieldWidth + x - 1) % FieldWidth;//декрементированное значение координаты X
-            if (CurrentState[Yinc, Xdec]) res++;
-            if (CurrentState[Yinc, (x)]) res++;
-            if (CurrentState[Yinc, Xinc]) res++;
-            if (CurrentState[(y), Xdec]) res++;
-            if (CurrentState[(y), Xinc]) res++;
-            if (CurrentState[Ydec, Xdec]) res++;
-            if (CurrentState[Ydec, (x)]) res++;
-            if (CurrentState[Ydec, Xinc]) res++;
+            if (CurrentState[Yinc, Xdec]) res++;// проворяем клетку выше и левее
+            if (CurrentState[Yinc, (x)]) res++;// проворяем клетку выше
+            if (CurrentState[Yinc, Xinc]) res++;// проворяем клетку выше и правее
+            if (CurrentState[(y), Xdec]) res++;// проворяем клетку левее
+            if (CurrentState[(y), Xinc]) res++;// проворяем клетку правее
+            if (CurrentState[Ydec, Xdec]) res++;// проворяем клетку ниже и левее
+            if (CurrentState[Ydec, (x)]) res++;// проворяем клетку ниже
+            if (CurrentState[Ydec, Xinc]) res++;// проворяем клетку ниже и правее
             return res;
         }
 
         /// <summary>
-        /// Рисуем картинку из объекта текущего состояния
+        /// Формируем картинку из объекта текущего состояния
         /// </summary>
         private void DrawBitmap()
         {
@@ -518,14 +539,18 @@ namespace Game_Of_Life
                 {
                     for (int x = 0; x < CurrentBitMap.Width; x++)
                     {
-
-                        CurrentBitMap.SetPixel(x, y, CurrentState[y, x] ? (LifeTime[y, x] == 0 ? Color.FromArgb(255, 0, 0, 255)
-                            : Color.FromArgb(255, 0, 255, 0)) : (LifeTime[y, x] == 0 ? Color.FromArgb(255, 255, 0, 0)
-                            : Color.FromArgb(255, 0, 0, 0)));
+                        // устанавливаем цвет клетки
+                        CurrentBitMap.SetPixel(x, y, 
+                            CurrentState[y, x]// проверяем живая или мертвая
+                            ? (LifeTime[y, x] == 0 // проверем возраст живой
+                            ? Color.FromArgb(255, 0, 0, 255)// новорожденные красим синим
+                            : Color.FromArgb(255, 0, 255, 0))// взрослые красим зеленым
+                            : (LifeTime[y, x] == 0 // проверем возраст мертвой
+                            ? Color.FromArgb(255, 255, 0, 0)// умершие красим синим
+                            : Color.FromArgb(255, 0, 0, 0)));// сгнившие красим черным
                     }
                 }
                 ShowBitMap();
-                Refresh();
             });
         }
 
@@ -536,15 +561,9 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
-            //запускаем симуляцию, делаем недоступными кнопки "пуск" и "пошаговое выполнения" и ползунок, разблокируем кнопку "пауза"
-            PauseButton.Enabled = true;
-            RunButton.Enabled = false;
-            RunOneStepButton.Enabled = false;
-            FillingPercentileTracker.Enabled = false;
-            ResetButton.Enabled = false;
-            //снимаем флаг паузы
-            suspended = false;
+            Play();
         }
+
         /// <summary>
         /// нажатие на кнопку пауза
         /// </summary>
@@ -552,15 +571,45 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
-            //останавливаем симуляцию, делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
-            PauseButton.Enabled = false;
-            RunButton.Enabled = true;
-            RunOneStepButton.Enabled = true;
-            FillingPercentileTracker.Enabled = true;
-            ResetButton.Enabled = true;
-            //устанавливаем флаг паузы
-            suspended = true;
+            Suspend();
         }
+
+        /// <summary>
+        /// Снимаем с паузы \ запускаем
+        /// </summary>
+        private void Play()
+        {
+            Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+            {
+                //запускаем симуляцию, делаем недоступными кнопки "пуск" и "пошаговое выполнения" и ползунок, разблокируем кнопку "пауза"
+                PauseButton.Enabled = !OneStep;
+                RunButton.Enabled = false;
+                RunOneStepButton.Enabled = false;
+                FillingPercentileTracker.Enabled = false;
+                ResetButton.Enabled = false;
+                //снимаем флаг паузы
+                suspended = false;
+            });
+        }
+
+        /// <summary>
+        /// Ставим на паузу
+        /// </summary>
+        private void Suspend()
+        {
+            Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+            {
+                //останавливаем симуляцию, делаем доступными кнопки "пуск" и "пошаговое выполнения" и ползунок, блокируем кнопку "пауза"
+                PauseButton.Enabled = false;
+                RunButton.Enabled = true;
+                RunOneStepButton.Enabled = true;
+                FillingPercentileTracker.Enabled = true;
+                ResetButton.Enabled = true;
+                //устанавливаем флаг паузы
+                suspended = true;
+            });
+        }
+
         /// <summary>
         /// Движение ползунка приводит к заполнению поля с указанным процентом живых клеток
         /// </summary>
@@ -568,15 +617,27 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
-            chart.Series[0].Points.Clear();
-            chart.Series[1].Points.Clear();
-            chart.Series[2].Points.Clear();
+            ClearChart();
             InitialDensityPercent = FillingPercentileTracker.Value;
             seedpercent.Text = InitialDensityPercent.ToString();
             CurrentState = new bool[FieldHeight, FieldWidth];
             NextState = new bool[FieldHeight, FieldWidth];
             InitialSeed();
         }
+
+        /// <summary>
+        /// очистка графика
+        /// </summary>
+        private void ClearChart()
+        {
+            Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+            {
+                chart.Series[0].Points.Clear();
+                chart.Series[1].Points.Clear();
+                chart.Series[2].Points.Clear();
+            });
+        }
+
         /// <summary>
         /// Нажатие кнопки пошагового выполнения
         /// </summary>
@@ -584,17 +645,10 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void button3_Click_1(object sender, EventArgs e)
         {
-            //запускаем симуляцию, делаем недоступными кнопки "пуск" и "пошаговое выполнения" и ползунок, разблокируем кнопку "пауза"
-            PauseButton.Enabled = true;
-            RunButton.Enabled = false;
-            RunOneStepButton.Enabled = false;
-            FillingPercentileTracker.Enabled = false;
-            ResetButton.Enabled = false;
-            //устанавливаем признак одного шага
             OneStep = true;
-            //снимаем флаг паузы
-            suspended = false;
+            Play();
         }
+
         /// <summary>
         /// Изменение числа отображаемых точек приводит к изменению масштаба графика
         /// </summary>
@@ -603,7 +657,7 @@ namespace Game_Of_Life
         private void cpcb_SelectedIndexChanged(object sender, EventArgs e)
         {
             ChartPoints = Convert.ToInt16(cpcb.Text);
-            //Делаем инвок для синхронизации доступа к GUI
+            // Синхронизируем доступ к GUI
             Instance.Invoke((MethodInvoker)delegate
             {
                 chart.ChartAreas[0].AxisX.Minimum = (movenumber <= ChartPoints) ? 0 : (movenumber - chart.Series[0].Points.Count);
@@ -611,6 +665,7 @@ namespace Game_Of_Life
                 + ChartPoints);
             });
         }
+
         /// <summary>
         /// меняем значение риска внезапной смерти
         /// </summary>
@@ -620,6 +675,7 @@ namespace Game_Of_Life
         {
             SuddenDeathPercent = (int)sdprob.Value;
         }
+
         /// <summary>
         /// меняем значение максимальной продолжительности жизни
         /// </summary>
@@ -630,32 +686,52 @@ namespace Game_Of_Life
             MaxTTL = (int)ttl.Value;
         }
 
+        /// <summary>
+        /// Изменение минимального для выживания количества соседей
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void nmin_ValueChanged(object sender, EventArgs e)
         {
             MinNeighbors = (int)nmin.Value;
         }
 
+        /// <summary>
+        /// Изменение максимеального для выживания количества соседей
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void nmax_ValueChanged(object sender, EventArgs e)
         {
             MaxNeighbors = (int)nmax.Value;
         }
 
+        /// <summary>
+        /// Изменение количества клеток для рождения новой
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void numericUpDown3_ValueChanged(object sender, EventArgs e)
         {
             NeighborsBornNew = (int)newborn.Value;
         }
 
+        /// <summary>
+        /// Двигаем мышкой с зажатой кнопкой, рисуем линию на картинке
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pic_MouseMove(object sender, MouseEventArgs e)
         {
             if (!suspended || zoomFactor != 1)
-                return;
+                return;// рисовать будем только если нет увеличения и на паузе
             if (isMouseDown == true)
             {
                 if (lastPoint != null)
                 {
                     using (Graphics g = Graphics.FromImage(pic.Image))
                     {
-                        g.DrawLine(new Pen(Color.FromArgb(255, 255, 255, 255), 1), lastPoint, e.Location);
+                        g.DrawLine(new Pen(Color.FromArgb(255, 0, 255, 0), 1), lastPoint, e.Location);
                         g.SmoothingMode = SmoothingMode.AntiAlias;
                     }
                     pic.Invalidate();
@@ -664,18 +740,28 @@ namespace Game_Of_Life
             }
         }
 
+        /// <summary>
+        /// Нажата кнопка мыши над картинкой, начинаем рисовать
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pic_MouseDown(object sender, MouseEventArgs e)
         {
-            if (zoomFactor != 1)
-                return;
+            if (!suspended || zoomFactor != 1)
+                return;// рисовать будем только если нет увеличения и на паузе
             lastPoint = e.Location;
             isMouseDown = true;
         }
 
+        /// <summary>
+        /// Кнопка мыши отпущена, заканчиваем отрисовку и копируем картинку в объект текущего состояния
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pic_MouseUp(object sender, MouseEventArgs e)
         {
-            if (zoomFactor != 1)
-                return;
+            if (!suspended || zoomFactor != 1)
+                return;// рисовать будем только если нет увеличения и на паузе
             var bm = (Bitmap)pic.Image;
             isMouseDown = false;
             lastPoint = Point.Empty;
@@ -694,21 +780,26 @@ namespace Game_Of_Life
             }
         }
 
+        /// <summary>
+        /// Окно программы показывается первый раз
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainForm_Shown(object sender, EventArgs e)
         {
             InitialSeed();
-            DrawBitmap();
-            Refresh();
         }
 
+        /// <summary>
+        /// Нажатие на кнопку Сброс
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ResetButton_Click(object sender, EventArgs e)
         {
+            zoomFactor = 1;
+            ClearChart();
             InitialSeed();
-            DrawBitmap();
-            chart.Series[0].Points.Clear();
-            chart.Series[1].Points.Clear();
-            chart.Series[2].Points.Clear();
-            Refresh();
         }
     }
 }

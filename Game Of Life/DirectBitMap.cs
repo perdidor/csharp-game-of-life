@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace Game_Of_Life
 {
+    /// <summary>
+    /// класс обеспечивает прямой доступ к содержимому картинки для редактирования с приемлемой скоростью
+    /// </summary>
     public class DirectBitmap : IDisposable
     {
         public Bitmap Bitmap { get; private set; }
