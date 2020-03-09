@@ -171,6 +171,11 @@ namespace Game_Of_Life
         bool isMouseDown = new Boolean();
 
         /// <summary>
+        /// Переменная хранит признак выполняющихся вычислений
+        /// </summary>
+        bool isBusy = false;
+
+        /// <summary>
         /// Запуск приложения
         /// </summary>
         public MainForm()
@@ -370,7 +375,10 @@ namespace Game_Of_Life
             // обсчитывать трансформацию будем в два параллельных потока
             // создаем массив асинхронных задач, делим поле пополам
             int divider = (int)(FieldHeight / 2);
-            CTS = new CancellationTokenSource();
+
+            CTS = new CancellationTokenSource();// сброс сигнала об остановке асинхронных задач
+
+
             var task1 = Task.Run(() => ProcessTransform(0, divider), CTS.Token);
             var task2 = Task.Run(() => ProcessTransform(divider, FieldHeight), CTS.Token);
             Task.WhenAll(task1, task2).Wait();// ожидаемся конца выполнения всех потоков
@@ -425,7 +433,7 @@ namespace Game_Of_Life
                 {
                     CTS.Cancel();// подаем сигнал СТОП асинхронным задачам
                     button2_Click(null, null);// нажимаем кнопку "Пауза"
-                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information", 
+                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 });
             }
@@ -727,7 +735,7 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void pic_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!suspended || zoomFactor != 1)
+            if (!suspended || zoomFactor != 1 || isBusy)
                 return;// рисовать будем только если нет увеличения и на паузе
             if (isMouseDown == true)
             {
@@ -751,7 +759,7 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void pic_MouseDown(object sender, MouseEventArgs e)
         {
-            if (!suspended || zoomFactor != 1)
+            if (!suspended || zoomFactor != 1 || isBusy)
                 return;// рисовать будем только если нет увеличения и на паузе
             lastPoint = e.Location;
             isMouseDown = true;
@@ -764,24 +772,32 @@ namespace Game_Of_Life
         /// <param name="e"></param>
         private void pic_MouseUp(object sender, MouseEventArgs e)
         {
-            if (!suspended || zoomFactor != 1)
+            if (!suspended || zoomFactor != 1 || isBusy)
                 return;// рисовать будем только если нет увеличения и на паузе
-            var bm = (Bitmap)pic.Image;
-            isMouseDown = false;
-            lastPoint = Point.Empty;
-            for (int y = 0; y < pic.Height; y++)
+            isBusy = true;
+            Task.Run(() =>
             {
-                for (int x = 0; x < pic.Width; x++)
+                Instance.Invoke((MethodInvoker)delegate
                 {
-                    CurrentState[y, x] = (bm.GetPixel(x, y) != Color.FromArgb(255, 0, 0, 0));
-                }
-            }
-            if (!RunButton.Enabled)
-            {
-                RunButton.Enabled = true;
-                RunOneStepButton.Enabled = true;
-                ResetButton.Enabled = true;
-            }
+                    var bm = (Bitmap)pic.Image;
+                    isMouseDown = false;
+                    lastPoint = Point.Empty;
+                    for (int y = 0; y < pic.Height; y++)
+                    {
+                        for (int x = 0; x < pic.Width; x++)
+                        {
+                            CurrentState[y, x] = (bm.GetPixel(x, y) != Color.FromArgb(255, 0, 0, 0));
+                        }
+                    }
+                    if (!RunButton.Enabled)
+                    {
+                        RunButton.Enabled = true;
+                        RunOneStepButton.Enabled = true;
+                        ResetButton.Enabled = true;
+                    }
+                });
+                isBusy = false;
+            });
         }
 
         /// <summary>
