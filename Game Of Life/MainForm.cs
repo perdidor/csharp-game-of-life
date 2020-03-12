@@ -12,7 +12,7 @@
 // Игра прекращается, если:
 // 1. на поле не останется ни одной «живой» клетки - РЕАЛИЗОВАНО
 // 2. Конфигурация на очередном шаге в точности(без сдвигов и поворотов) повторит себя же на одном из более ранних шагов(складывается
-// периодическая конфигурация) - НЕ РЕАЛИЗОВАНО
+// периодическая конфигурация) - РЕАЛИЗОВАНО
 // 3. При очередном шаге ни одна из клеток не меняет своего состояния(складывается стабильная конфигурация; предыдущее правило,
 // вырожденное до одного шага назад) - РЕАЛИЗОВАНО
 // Эти простые правила приводят к огромному разнообразию форм, которые могут возникнуть в игре.
@@ -28,14 +28,18 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.IO;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Security.Cryptography;
 
 namespace Game_Of_Life
 {
     public partial class MainForm : Form
     {
+        private List<string> HistoryHashes = new List<string>();
         /// <summary>
         /// Родилось клеток
         /// </summary>
@@ -212,6 +216,7 @@ namespace Game_Of_Life
                     {
                         DrawBitmap();
                         Transform();
+                        CheckAndStoreHIstoryHash();
                     }
                     catch (Exception ex)
                     {
@@ -425,17 +430,6 @@ namespace Game_Of_Life
             {
                 // Есть изменения, копируем состояние следующего шага в текущий массив
                 Array.Copy(NextState, CurrentState, NextState.Length);
-            }
-            else
-            {
-                // Игра прекращается, если при очередном шаге ни одна из клеток не меняет своего состояния, ставим на паузу и показываем сообщение
-                Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
-                {
-                    CTS.Cancel();// подаем сигнал СТОП асинхронным задачам
-                    button2_Click(null, null);// нажимаем кнопку "Пауза"
-                    MessageBox.Show(Instance, string.Format("Cложилась стабильная конфигурация на шаге# {0}", movenumber), "Information",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                });
             }
         }
 
@@ -820,6 +814,39 @@ namespace Game_Of_Life
             zoomFactor = 1;
             ClearChart();
             InitialSeed();
+            HistoryHashes.Clear();
+        }
+
+        private void CheckAndStoreHIstoryHash()
+        {
+            // ограничим отслеживание истории списком состояний длиной 10000 записей, чтобы не терять производительность
+            if (HistoryHashes.Count == 10000)
+                HistoryHashes.RemoveAt(0);
+            byte[] tmparr;
+            using (var memoryStream = new MemoryStream())
+            {
+                CurrentBitMap.Bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                tmparr = memoryStream.ToArray();
+            }
+            // вычисляем хэш-функцию от текущего состояния игрового поля, длиной 256 бит = 32 байта
+            SHA256 shaM = new SHA256Managed();
+            var HashedbytesString = Convert.ToBase64String(shaM.ComputeHash(tmparr));
+            if (!HistoryHashes.Any(rec => rec == HashedbytesString))
+            {
+                HistoryHashes.Add(HashedbytesString);// строки в истории еще нет => текущее состояние уникально, продолжаем
+            }
+            else
+            {// строк анайдена в списке => текущее состояние повторяет предыдущее на одном из шагов => гейм овер
+                var stepsbefore = HistoryHashes.Count - HistoryHashes.IndexOf(HashedbytesString);// сколько шагов назад было совпадение
+                HistoryHashes.Clear();// чистим историю
+                Instance.Invoke((MethodInvoker)delegate// делегируем отрисовку GUI основному потоку, в котором обрабатывается весь интерфейс
+                {
+                    CTS.Cancel();// подаем сигнал СТОП асинхронным задачам
+                    button2_Click(null, null);// нажимаем кнопку "Пауза"
+                    MessageBox.Show(Instance, string.Format("Конфигурация поколения {0} повторяет конфигурацию поколений назад: {1}", movenumber, stepsbefore), "Information",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
+            }
         }
     }
 }
